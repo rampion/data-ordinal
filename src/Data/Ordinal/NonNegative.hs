@@ -3,6 +3,7 @@ module Data.Ordinal.NonNegative where
 import Prelude hiding (map)
 import Data.Maybe (fromMaybe)
 
+-- | Invariant: NonNegative x => x >= 0
 newtype NonNegative a = NonNegative { getNonNegative :: a }
   deriving (Eq, Ord)
 

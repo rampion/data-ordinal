@@ -4,8 +4,14 @@ module Data.Ordinal.Internal where
 import qualified Data.Ordinal.Positive as P
 import qualified Data.Ordinal.NonNegative as N
 
-type CNF a = [(Ordinal a, P.Positive a)]
+-- | Invariant:
+-- > α = Ordinal αs 
+-- >   = Ordinal [(α_k,a_k),...,(α_1,a_1),(α_0,a_0)]
+-- >   = ω ^ α_k * a_k + ... + ω ^ α_1 * a_1 + ω ^ α_0 * a_0
+-- > s.t. 
+-- >   α_k > ... > α_1 * a_1 > α_0
 newtype Ordinal a = Ordinal { toCNF :: CNF a }
+type CNF a = [(Ordinal a, P.Positive a)]
 
 fromCNF :: CNF a -> Ordinal a
 fromCNF = Ordinal

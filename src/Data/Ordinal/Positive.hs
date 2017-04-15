@@ -3,6 +3,7 @@ module Data.Ordinal.Positive where
 import Prelude hiding (map)
 import Data.Maybe (fromMaybe)
 
+-- | Invariant: Positive a => a > 0
 newtype Positive a = Positive { getPositive :: a }
   deriving (Eq, Ord)
 

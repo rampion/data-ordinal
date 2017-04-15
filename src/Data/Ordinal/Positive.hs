@@ -11,6 +11,10 @@ toPositive :: (Num a, Ord a) => a -> Maybe (Positive a)
 toPositive a | a <= 0    = Nothing
              | otherwise = Just $ Positive a
 
+-- | Incomplete: Positive is almost a near-semiring
+-- - @(-)@ is undefined
+-- - @negate@ is undefined
+-- - @fromInteger@ is partial
 instance (Num a, Ord a) => Num (Positive a) where
   (+) = apply (+)
   (*) = apply (*)

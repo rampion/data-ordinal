@@ -11,6 +11,10 @@ toNonNegative :: (Num a, Ord a) => a -> Maybe (NonNegative a)
 toNonNegative a | a < 0     = Nothing
                 | otherwise = Just $ NonNegative a
 
+-- | Incomplete: NonNegative is only a near-semiring
+-- - @(-)@ is undefined
+-- - @negate@ is undefined
+-- - @fromInteger@ is partial
 instance (Num a, Ord a) => Num (NonNegative a) where
   (+) = apply (+)
   (*) = apply (*)

@@ -11,6 +11,7 @@ import qualified Data.Ordinal.NonNegative as N
 -- > s.t. 
 -- >   α_k > ... > α_1 * a_1 > α_0
 newtype Ordinal a = Ordinal { toCNF :: CNF a }
+  deriving (Eq, Ord)
 type CNF a = [(Ordinal a, P.Positive a)]
 
 fromCNF :: CNF a -> Ordinal a

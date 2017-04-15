@@ -58,7 +58,7 @@ toOrdinal = fmap fromNonNegative . N.toNonNegative
 --    * @fromInteger@ is partial
 instance (Ord a, Num a) => Num (Ordinal a) where
   (+) = apply mergeAppend
-  (*) = undefined
+  (*) = apply times
   (-) = error "subtraction is not defined for Ordinal numbers"
   negate = error "negation is not defined for Ordinal numbers"
   abs = id
@@ -108,3 +108,9 @@ mergeAppend ps qs@((β_k,b_k):qt) = fromMaybe qs $ foldr go Nothing ps where
   -- ω ^ α_(i'-1) * a_(i'-1)+ ... + ω ^ α_0 * a_0 + β has CNF γ
   --  => ω ^ α_i' * a_i' + ... + ω ^ α_0 * a_0 + β has CNF ω ^ α_i' * a_i' + γ
   go p (Just vs) = Just (p:vs)
+
+times :: (Ord a, Num a) => CNF a -> CNF a -> CNF a
+times [] = const []
+times ((α_k,a_k):pt) = foldr go [] where
+  go (Zero,b_0) _ = (α_k, a_k * b_0) : pt
+  go (β_i,b_i) vs = (α_k + β_i, b_i) : vs

@@ -16,6 +16,7 @@ library
                  , Data.Ordinal.Internal
                  , Data.Ordinal.Positive
                  , Data.Ordinal.NonNegative
+                 , Data.Ordinal.Pow
   other-extensions:    PatternSynonyms
   build-depends:       base >=4.9 && <4.10
   hs-source-dirs:      src

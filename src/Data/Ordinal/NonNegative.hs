@@ -1,7 +1,8 @@
 module Data.Ordinal.NonNegative where
 
-import Prelude hiding (map)
+import Prelude hiding (map, (^))
 import Data.Maybe (fromMaybe)
+import Data.Ordinal.Pow
 
 -- | Invariant: NonNegative x => x >= 0
 newtype NonNegative a = NonNegative { getNonNegative :: a }
@@ -24,6 +25,9 @@ instance (Num a, Ord a) => Num (NonNegative a) where
   signum = map signum
   fromInteger n = fromMaybe (error msg) . toNonNegative $ fromInteger n  where
     msg = shows n " can not be converted to a NonNegative number"
+
+instance Pow a => Pow (NonNegative a) where
+  (^) = apply (^)
 
 apply :: (a -> a -> a) -> NonNegative a -> NonNegative a -> NonNegative a
 apply f (NonNegative a) (NonNegative b) = NonNegative $ f a b

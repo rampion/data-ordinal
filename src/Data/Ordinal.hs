@@ -5,11 +5,13 @@ module Data.Ordinal
   , I.fromNonNegative, I.fromPositive, I.toOrdinal
   , P.Positive(), pattern Positive, P.getPositive, P.toPositive
   , N.NonNegative(), pattern NonNegative, N.getNonNegative, N.toNonNegative
+  , Pow(..)
   ) where
 
 import qualified Data.Ordinal.Internal as I
 import qualified Data.Ordinal.Positive as P
 import qualified Data.Ordinal.NonNegative as N
+import Data.Ordinal.Pow
 -- import Data.Ordinal.Show
 
 pattern Ordinal :: I.CNF a -> I.Ordinal a

@@ -1,7 +1,8 @@
 module Data.Ordinal.Positive where
 
-import Prelude hiding (map)
+import Prelude hiding (map, (^))
 import Data.Maybe (fromMaybe)
+import Data.Ordinal.Pow
 
 -- | Invariant: Positive a => a > 0
 newtype Positive a = Positive { getPositive :: a }
@@ -24,6 +25,9 @@ instance (Num a, Ord a) => Num (Positive a) where
   signum = map signum
   fromInteger n = fromMaybe (error msg) . toPositive $ fromInteger n  where
     msg = shows n " can not be converted to a Positive number"
+
+instance Pow a => Pow (Positive a) where
+  (^) = apply (^)
 
 apply :: (a -> a -> a) -> Positive a -> Positive a -> Positive a
 apply f (Positive a) (Positive b) = Positive $ f a b

@@ -11,6 +11,7 @@ module Data.Ordinal.Internal where
 import Data.Maybe (fromMaybe)
 import qualified Data.Ordinal.Positive as P
 import qualified Data.Ordinal.NonNegative as N
+import Data.Ordinal.LPred
 
 -- | Invariant:
 -- > α = Ordinal αs 
@@ -66,6 +67,12 @@ instance (Ord a, Num a) => Num (Ordinal a) where
   signum _ = One
   fromInteger n = fromMaybe (error msg) . toOrdinal $ fromInteger n  where
     msg = shows n " can not be converted to a Ordinal number"
+
+instance (Eq a, Num a, LPred a) => LPred (Ordinal a) where
+  lpred (P.Positive (Positive a)) = N.NonNegative $ case lpred a of
+    N.NonNegative 0 -> Zero
+    N.NonNegative a' -> Finite a'
+  lpred (P.Positive α) = N.NonNegative α
 
 apply :: (CNF a -> CNF a -> CNF a) -> Ordinal a -> Ordinal a -> Ordinal a
 apply f (Ordinal ps) (Ordinal qs) = Ordinal $ f ps qs

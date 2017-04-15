@@ -1,0 +1,34 @@
+name:                ordinal
+version:             0.1.0.0
+synopsis:            ordinal numbers
+-- description:         ordinal numbers
+license:             PublicDomain
+author:              Noah Luck Easterly
+maintainer:          noah.easterly@gmail.com
+category:            Math
+build-type:          Simple
+extra-source-files:  ChangeLog.md
+                  ,  README.md
+cabal-version:       >=1.10
+
+library
+  -- Modules exported by the library.
+  exposed-modules: Data.Ordinal
+                 , Data.Ordinal.Internal
+                 , Data.Ordinal.Show
+                 , Data.Ordinal.Positive
+                 , Data.Ordinal.NonNegative
+  
+  -- LANGUAGE extensions used by modules in this package.
+  -- other-extensions:    
+  
+  -- Other library packages from which modules are imported.
+  build-depends:       base >=4.9 && <4.10
+  
+  -- Directories containing source files.
+  hs-source-dirs:      src
+  
+  -- Base language which the package is written in.
+  default-language:    Haskell2010
+  
+  ghc-options:         -Wall -Werror

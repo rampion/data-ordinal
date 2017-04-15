@@ -2,8 +2,9 @@
 module Data.Ordinal
   ( I.Ordinal(), pattern Ordinal, pattern I.Zero, pattern I.One, pattern I.Finite, pattern I.Omega
   , I.CNF, I.toCNF, I.fromCNF
-  , P.Positive(), pattern Positive, P.fromPositive, P.toPositive
-  , N.NonNegative(), pattern NonNegative, N.fromNonNegative, N.toNonNegative
+  , I.fromNonNegative, I.fromPositive, I.toOrdinal
+  , P.Positive(), pattern Positive, P.getPositive, P.toPositive
+  , N.NonNegative(), pattern NonNegative, N.getNonNegative, N.toNonNegative
   ) where
 
 import qualified Data.Ordinal.Internal as I

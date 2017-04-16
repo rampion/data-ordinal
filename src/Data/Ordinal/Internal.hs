@@ -58,8 +58,8 @@ toOrdinal = fmap fromNonNegative . N.toNonNegative
 --    * @negate@ is undefined
 --    * @fromInteger@ is partial
 instance (Ord a, Num a) => Num (Ordinal a) where
-  (+) = apply mergeAppend
-  (*) = apply times
+  (+) = apply truncateAndConcat
+  (*) = apply scaleAndConcat
   (-) = error "subtraction is not defined for Ordinal numbers"
   negate = error "negation is not defined for Ordinal numbers"
   abs = id
@@ -99,9 +99,9 @@ apply f (Ordinal ps) (Ordinal qs) = Ordinal $ f ps qs
 --    is less than the leading exponent of α
 --  * concatenate the CNF of α' and β, merging the last term of α' and the
 --    head of β if their exponents are equal
-mergeAppend :: (Ord a, Num a) => CNF a -> CNF a -> CNF a
-mergeAppend ps [] = ps
-mergeAppend ps qs@((β_k,b_k):qt) = fromMaybe qs $ foldr go Nothing ps where
+truncateAndConcat :: (Ord a, Num a) => CNF a -> CNF a -> CNF a
+truncateAndConcat ps [] = ps
+truncateAndConcat ps qs@((β_k,b_k):qt) = fromMaybe qs $ foldr go Nothing ps where
   -- Given β is ω ^ β_k * b_k + β' in CNF
   go p@(α_i,a_i) Nothing = case compare α_i β_k of
     -- α_i < β_k => ω ^ α_i * a_i + β has CNF β
@@ -116,8 +116,34 @@ mergeAppend ps qs@((β_k,b_k):qt) = fromMaybe qs $ foldr go Nothing ps where
   --  => ω ^ α_i' * a_i' + ... + ω ^ α_0 * a_0 + β has CNF ω ^ α_i' * a_i' + γ
   go p (Just vs) = Just (p:vs)
 
-times :: (Ord a, Num a) => CNF a -> CNF a -> CNF a
-times [] = const []
-times ((α_k,a_k):pt) = foldr go [] where
+scaleAndConcat :: (Ord a, Num a) => CNF a -> CNF a -> CNF a
+scaleAndConcat [] = const []
+-- multiplication is left-distributive
+-- α * (ω ^ β_k * b_k + ... + ω ^ β_1 * b_1 + ω ^ β_0 * b_0)
+-- = (α * ω ^ β_k * b_k) + ... + (α * ω ^ β_1 * b_1) + (α * ω ^ β_0 * b_0)
+--
+-- we can skip the addition step by observing that
+--  * β_i > 0 => (α * ω ^ β_i * b_i) has a length-1 CNF
+--  * β_i = 0 => (α * ω ^ β_i * b_i) has a CNF the same length as α,
+--    but it can only occur as the last term in the CNF
+-- so we use `foldr go []` as a combo map/concat
+--
+-- The CNF invariant is preserved as β_i > β_i' => α_k + β_i > α_k + β_i'
+scaleAndConcat ((α_k,a_k):pt) = foldr go [] where
+  -- α * b_0
+  --  = (ω ^ α_k * a_k + α') * b_0
+  --  = (ω ^ α_k * a_k + α') + (ω ^ α_k * a_k + α') + ... + (ω ^ α_k * a_k + α')
+  --  = ω ^ α_k * a_k + (α' + ω ^ α_k * a_k) + (α' + ... + ω ^ α_k * a_k) + α'
+  --  = ω ^ α_k * a_k + ω ^ α_k * a_k + ... + ω ^ α_k * a_k + α'
+  --  = ω ^ α_k * a_k * b_0 + α'
   go (Zero,b_0) _ = (α_k, a_k * b_0) : pt
+  -- α * ω ^ β_i * b_i
+  --  = (ω ^ α_k * a_k + α') * ω ^ β_i * b_i
+  --  = (ω ^ α_k * a_k + α') + (ω ^ α_k * a_k + α') + ... 
+  --  = ω ^ α_k * a_k + (α' + ω ^ α_k * a_k) + (α' + ... 
+  --  = ω ^ α_k * a_k + ω ^ α_k * a_k + ... 
+  --  = (ω ^ α_k * a_k) * ω ^ β_i * b_i
+  --  = ω ^ α_k * (a_k * ω ^ β_i) * b_i
+  --  = ω ^ α_k * ω ^ β_i * b_i
+  --  = ω ^ (α_k + β_i) * b_i
   go (β_i,b_i) vs = (α_k + β_i, b_i) : vs

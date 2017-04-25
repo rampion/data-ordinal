@@ -1,36 +1,15 @@
-module Data.Ordinal.Positive where
+{-# LANGUAGE PatternSynonyms #-}
+module Data.Ordinal.Positive
+  ( module Data.Ordinal.Positive.Internal
+  , pattern Positive
+  ) where
 
-import Prelude hiding (map, (^))
-import Data.Maybe (fromMaybe)
-import Data.Ordinal.Pow
+import qualified Data.Ordinal.Positive.Internal as Internal
+-- hide the dumb constructor and unsafe accessors from the external API
+-- as they could be used to create invariant-breaking values
+import Data.Ordinal.Positive.Internal hiding (Positive, map, apply)
+-- but not the type
+import Data.Ordinal.Positive.Internal (Positive())
 
--- | Invariant: Positive a => a > 0
-newtype Positive a = Positive { getPositive :: a }
-  deriving (Eq, Ord)
-
-toPositive :: (Num a, Ord a) => a -> Maybe (Positive a)
-toPositive a | a <= 0    = Nothing
-             | otherwise = Just $ Positive a
-
--- | Incomplete: Positive is almost a near-semiring
---    * @(-)@ is undefined
---    * @negate@ is undefined
---    * @fromInteger@ is partial
-instance (Num a, Ord a) => Num (Positive a) where
-  (+) = apply (+)
-  (*) = apply (*)
-  (-) = error "subtraction is not defined for Positive numbers"
-  negate = error "negation is not defined for Positive numbers"
-  abs = id
-  signum = map signum
-  fromInteger n = fromMaybe (error msg) . toPositive $ fromInteger n  where
-    msg = shows n " can not be converted to a Positive number"
-
-instance Pow a => Pow (Positive a) where
-  (^) = apply (^)
-
-apply :: (a -> a -> a) -> Positive a -> Positive a -> Positive a
-apply f (Positive a) (Positive b) = Positive $ f a b
-
-map :: (a -> a) -> Positive a -> Positive a
-map f (Positive a) = Positive $ f a
+pattern Positive :: a -> Positive a
+pattern Positive a <- Internal.Positive a

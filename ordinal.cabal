@@ -13,12 +13,18 @@ cabal-version:       >=1.10
 
 library
   exposed-modules: Data.Ordinal
-                 , Data.Ordinal.Internal
-                 , Data.Ordinal.Positive
-                 , Data.Ordinal.NonNegative
-                 , Data.Ordinal.Pow
                  , Data.Ordinal.Finite
-  other-extensions:    PatternSynonyms
+                 , Data.Ordinal.Expansion
+                 , Data.Ordinal.Expansion.Internal
+                 , Data.Ordinal.Positive
+                 , Data.Ordinal.Positive.Internal
+                 , Data.Ordinal.NonNegative
+                 , Data.Ordinal.NonNegative.Internal
+                 , Data.Ordinal.Pow
+                 , Data.Ordinal.LPred
+  other-extensions: PatternSynonyms
+                  , TupleSections
+                  , LambdaCase
   build-depends:       base >=4.9 && <4.10
                ,       mtl >= 2.2.1 && < 2.3.0.0
   hs-source-dirs:      src

@@ -1,7 +1,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE LambdaCase #-}
-module Data.Ordinal.Internal where
+module Data.Ordinal.Expansion.Internal where
 
 import Control.Applicative ((<|>))
 import Control.Arrow (first)
@@ -9,11 +9,11 @@ import Control.Monad.Identity (Identity(..))
 import Data.Maybe (fromMaybe)
 import Prelude hiding ((^))
 
-import Data.Ordinal.Positive
-import Data.Ordinal.NonNegative
+import Data.Ordinal.Finite
+import Data.Ordinal.Positive.Internal
+import Data.Ordinal.NonNegative.Internal
 import Data.Ordinal.LPred
 import Data.Ordinal.Pow
-import Data.Ordinal.Finite
 
 -- | The closure of @a U {∞}@ under addition, multiplication, and
 -- exponentiation.

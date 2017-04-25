@@ -2,6 +2,8 @@ module Data.Ordinal.NonNegative.Internal where
 
 import Prelude hiding (map, (^))
 import Data.Maybe (fromMaybe)
+
+import Data.Ordinal.Minus
 import Data.Ordinal.Pow
 
 -- | Invariant: NonNegative x => x >= 0
@@ -13,13 +15,16 @@ toNonNegative a | a < 0     = Nothing
                 | otherwise = Just $ NonNegative a
 
 -- | Incomplete: NonNegative is only a near-semiring
---    * @(-)@ is undefined
+--    * @(-)@ is partial
 --    * @negate@ is undefined
 --    * @fromInteger@ is partial
-instance (Num a, Ord a) => Num (NonNegative a) where
+instance (Minus a, Num a, Ord a) => Num (NonNegative a) where
   (+) = apply (+)
   (*) = apply (*)
-  (-) = error "subtraction is not defined for NonNegative numbers"
+  a - b = case a `minus` b of
+    RightDiff _ -> error "subtraction is not closed on NonNegative numbers"
+    NoDiff      -> NonNegative 0
+    LeftDiff c  -> c
   negate = error "negation is not defined for NonNegative numbers"
   abs = id
   signum = map signum
@@ -28,6 +33,12 @@ instance (Num a, Ord a) => Num (NonNegative a) where
 
 instance Pow a => Pow (NonNegative a) where
   (^) = apply (^)
+
+instance Minus a => Minus (NonNegative a) where
+  NonNegative a `minus` NonNegative b = case a `minus` b of
+    RightDiff c -> RightDiff $ NonNegative c
+    NoDiff      -> NoDiff
+    LeftDiff c  -> LeftDiff $ NonNegative c
 
 apply :: (a -> a -> a) -> NonNegative a -> NonNegative a -> NonNegative a
 apply f (NonNegative a) (NonNegative b) = NonNegative $ f a b

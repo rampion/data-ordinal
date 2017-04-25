@@ -6,6 +6,7 @@ module Data.Ordinal
   -- , module Iterate
   , module Pow
   , module LPred
+  , module Minus
   -- , module Countable
   -- , module Notation
   ) where
@@ -17,5 +18,6 @@ import Data.Ordinal.NonNegative as NonNegative
 -- import Data.Ordinal.Iterate as Iterate
 import Data.Ordinal.Pow as Pow
 import Data.Ordinal.LPred as LPred
+import Data.Ordinal.Minus as Minus
 -- import Data.Ordinal.Countable as Countable
--- import Data.Ordinal.HasSymbol as HasSymbol
+-- import Data.Ordinal.Notation as Notation

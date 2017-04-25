@@ -22,6 +22,7 @@ library
                  , Data.Ordinal.NonNegative.Internal
                  , Data.Ordinal.Pow
                  , Data.Ordinal.LPred
+                 , Data.Ordinal.Minus
   other-extensions: PatternSynonyms
                   , TupleSections
                   , LambdaCase

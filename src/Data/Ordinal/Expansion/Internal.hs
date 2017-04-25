@@ -12,6 +12,7 @@ import Prelude hiding ((^))
 import Data.Ordinal.Finite
 import Data.Ordinal.Positive.Internal
 import Data.Ordinal.NonNegative.Internal
+import Data.Ordinal.Minus
 import Data.Ordinal.LPred
 import Data.Ordinal.Pow
 
@@ -96,10 +97,10 @@ degree (Expansion []) = Nothing
 degree (Expansion ((α_k,_):_)) = Just α_k
 
 -- | Incomplete: Expansion is only a near-semiring
---    * @(-)@ is partial (TODO)
+--    * @(-)@ is partial
 --    * @negate@ is an error
 --    * @fromInteger@ is partial
-instance (Ord a, Num a) => Num (Expansion a) where
+instance (Ord a, Num a, Minus a) => Num (Expansion a) where
   -- Without loss of generality, let
   --    > α = α_gt + ∞ ^ γ * a + α_lt
   --    > β = ∞ ^ γ * b + β_lt
@@ -150,13 +151,29 @@ instance (Ord a, Num a) => Num (Expansion a) where
     --  = ∞ ^ (α_k + β_i) * b_i
     go (β_i, b_i) vs = (α_k + β_i, b_i) : vs
 
-  (-) = error "subtraction is not defined for Expansion numbers"
+  α - β = case α `minus` β of
+    RightDiff _ -> error "subtraction is not closed on Expansion numbers"
+    NoDiff      -> Zero
+    LeftDiff γ  -> γ
+
   negate = error "negation is not defined for Expansion numbers"
   abs = id
   signum Zero = Zero
   signum _ = One
   fromInteger n = fromMaybe (error msg) . toExpansion $ fromInteger n  where
     msg = shows n " can not be converted to a Expansion number"
+
+instance (Ord a, Minus a) => Minus (Expansion a) where
+  Expansion [] `minus` Expansion [] = NoDiff
+  Expansion [] `minus` β = RightDiff β
+  α `minus` Expansion [] = LeftDiff α
+  Expansion ps@((α_i, a_i):pt) `minus` Expansion qs@((β_j, b_j):qt) = case α_i `compare` β_j of
+      LT -> RightDiff $ Expansion qs
+      GT -> LeftDiff $ Expansion ps 
+      EQ -> case a_i `minus` b_j of
+        RightDiff c -> RightDiff . Expansion $ (β_j, c) : qt
+        LeftDiff c  -> LeftDiff . Expansion $ (α_i, c) : pt
+        NoDiff -> Expansion pt `minus` Expansion qt
 
 instance LPred a => LPred (Expansion a) where
   lpred (Positive (Lifted a)) = NonNegative . Lifted . getNonNegative . lpred $ Positive a
@@ -165,7 +182,7 @@ instance LPred a => LPred (Expansion a) where
 instance (Eq a, Num a, LensFinite a) => LensFinite (Expansion a) where
   lensFinite f = lensNonNegative (fmap NonNegative . lensFinite f. getNonNegative)
 
-instance (Ord a, Num a, LPred a, Pow a, LensFinite a) => Pow (Expansion a) where
+instance (Ord a, Num a, LPred a, Minus a, Pow a, LensFinite a) => Pow (Expansion a) where
   _ ^ Expansion [] = One
   Expansion [] ^ _ = Zero
 

@@ -14,13 +14,13 @@ cabal-version:       >=1.10
 library
   exposed-modules: Data.Ordinal
                  , Data.Ordinal.Finite
-                 , Data.Ordinal.Expansion
-                 , Data.Ordinal.Expansion.Internal
+                 , Data.Ordinal.Finite.Internal
                  , Data.Ordinal.Positive
                  , Data.Ordinal.Positive.Internal
-                 , Data.Ordinal.NonNegative
-                 , Data.Ordinal.NonNegative.Internal
+                 , Data.Ordinal.Expansion
+                 , Data.Ordinal.Expansion.Internal
                  , Data.Ordinal.Pow
+                 , Data.Ordinal.Lens
                  , Data.Ordinal.LPred
                  , Data.Ordinal.Minus
   other-extensions: PatternSynonyms

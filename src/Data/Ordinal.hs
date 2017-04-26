@@ -1,23 +1,21 @@
 module Data.Ordinal
   ( module Finite
-  , module Expansion
   , module Positive
-  , module NonNegative
-  -- , module Iterate
+  , module Expansion
+  -- , module Countable
   , module Pow
   , module LPred
   , module Minus
-  -- , module Countable
+  , module Lens
   -- , module Notation
   ) where
 
 import Data.Ordinal.Finite as Finite
-import Data.Ordinal.Expansion as Expansion
 import Data.Ordinal.Positive as Positive
-import Data.Ordinal.NonNegative as NonNegative
--- import Data.Ordinal.Iterate as Iterate
+import Data.Ordinal.Expansion as Expansion
 import Data.Ordinal.Pow as Pow
 import Data.Ordinal.LPred as LPred
+import Data.Ordinal.Lens as Lens
 import Data.Ordinal.Minus as Minus
 -- import Data.Ordinal.Countable as Countable
 -- import Data.Ordinal.Notation as Notation

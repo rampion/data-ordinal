@@ -5,23 +5,22 @@ module Data.Ordinal.Expansion.Internal where
 
 import Control.Applicative ((<|>))
 import Control.Arrow (first)
-import Control.Monad.Identity (Identity(..))
 import Data.Maybe (fromMaybe)
 import Prelude hiding ((^))
 
 import Data.Ordinal.Finite
 import Data.Ordinal.Positive.Internal
-import Data.Ordinal.NonNegative.Internal
 import Data.Ordinal.Minus
 import Data.Ordinal.LPred
 import Data.Ordinal.Pow
+import Data.Ordinal.Lens
 
 -- | The closure of @a U {∞}@ under addition, multiplication, and
 -- exponentiation.
 --
 -- Notation:
 --   *  α,β,γ :: Expansion a
---   *  a,b,c :: Positive a | NonNegative a | a
+--   *  a,b,c :: Positive a | a
 --   *  x,y,z :: Finite
 --   *  p,q,v :: (Expansion a, Positive a)
 --   * _s, _t :: [_]
@@ -64,37 +63,21 @@ pattern EpsilonNaught = Infinity
 
 -- ε_1 = Infinity :: Expansion (Expansion (Expansion Finite))
 
--- | A lens to access the coefficient of @∞ ^ 0@ in the base δ expansion
--- encoding.
-lensNonNegative :: (Functor f, Eq a, Num a) => 
-  (NonNegative a -> f (NonNegative a)) -> Expansion a -> f (Expansion a)
-lensNonNegative f = fmap Expansion . foldr go (use 0) . getExpansion where
-  use a_0 = f (NonNegative a_0) <&> \case
-    NonNegative 0   -> []
-    NonNegative b_0 -> [(Zero, Positive b_0)]
-  (<&>) = flip fmap
-  go (Zero, Positive a_0) = const $ use a_0
-  go p = fmap (p:)
-
-fromNonNegative :: (Eq a, Num a) => NonNegative a -> Expansion a
-fromNonNegative a = runIdentity $ lensNonNegative (\_ -> Identity a) Zero
-
--- | Remove the @∞ ^ 0@ term in the base δ expansion encoding
---
--- Invariant: 
---    > viewNonNegative α = (a, α') =>
---    >   α' + fromNonNegative a = α AND
---    >   viewNonNegative α' = (0, α')
-viewNonNegative :: (Eq a, Num a) => Expansion a -> (NonNegative a, Expansion a)
-viewNonNegative = lensNonNegative (,NonNegative 0)
-
-toExpansion :: (Ord a, Num a) => a -> Maybe (Expansion a)
-toExpansion = fmap fromNonNegative . toNonNegative
-
 -- | leading exponent of the base δ expansion of an ordinal (if any)
 degree :: Expansion a -> Maybe (Expansion a)
 degree (Expansion []) = Nothing
 degree (Expansion ((α_k,_):_)) = Just α_k
+
+instance LensBase Expansion where
+  -- | A lens to access the coefficient of @∞ ^ 0@ in the base δ expansion
+  -- encoding.
+  lensBase f = fmap Expansion . foldr go (use 0) . getExpansion where
+    use a_0 = f a_0 <&> \case
+      0   -> []
+      b_0 -> [(Zero, Positive b_0)]
+    (<&>) = flip fmap
+    go (Zero, Positive a_0) = const $ use a_0
+    go p = fmap (p:)
 
 -- | Incomplete: Expansion is only a near-semiring
 --    * @(-)@ is partial
@@ -160,8 +143,7 @@ instance (Ord a, Num a, Minus a) => Num (Expansion a) where
   abs = id
   signum Zero = Zero
   signum _ = One
-  fromInteger n = fromMaybe (error msg) . toExpansion $ fromInteger n  where
-    msg = shows n " can not be converted to a Expansion number"
+  fromInteger n = fromBase $ fromInteger n  where
 
 instance (Ord a, Minus a) => Minus (Expansion a) where
   Expansion [] `minus` Expansion [] = NoDiff
@@ -176,11 +158,8 @@ instance (Ord a, Minus a) => Minus (Expansion a) where
         NoDiff -> Expansion pt `minus` Expansion qt
 
 instance LPred a => LPred (Expansion a) where
-  lpred (Positive (Lifted a)) = NonNegative . Lifted . getNonNegative . lpred $ Positive a
-  lpred (Positive α) = NonNegative α
-
-instance (Eq a, Num a, LensFinite a) => LensFinite (Expansion a) where
-  lensFinite f = lensNonNegative (fmap NonNegative . lensFinite f. getNonNegative)
+  lpred (Positive (Lifted a)) = Lifted . lpred $ Positive a
+  lpred (Positive α) = α
 
 instance (Ord a, Num a, LPred a, Minus a, Pow a, LensFinite a) => Pow (Expansion a) where
   _ ^ Expansion [] = One
@@ -194,14 +173,14 @@ instance (Ord a, Num a, LPred a, Minus a, Pow a, LensFinite a) => Pow (Expansion
   --  = Infinity ^ β' * (a ^ b)
   Lifted a ^ β = Expansion [(Expansion qs', Positive $ a ^ b)] where
     -- β = (Expansion qs)@(∞ ^ β_k * b_k + ... + ∞ ^ β_1 * b_1) + b
-    (NonNegative b, Expansion qs) = viewNonNegative β
+    (b, Expansion qs) = viewBase β
     -- β' = ∞ ^ β_k' * b_k + ... + ∞ ^ β_1' * b_1
     --  where 1 + β_i' = β_i
-    qs' = first (getNonNegative . lpred . Positive) <$> qs
+    qs' = first (lpred . Positive) <$> qs
 
   -- 
   Expansion ((α_k,a_k):pt) ^ β = Expansion $ loop Nothing (Positive 1) γs where
-    γs = (α_k *) <$> lensFinite (\(NonNegative z) -> NonNegative <$> [z, z-1 .. 0]) β
+    γs = (α_k *) <$> lensFinite (\z -> [z, z-1 .. 0]) β
 
     loop _ c [γ] = [(γ, c)]
     loop a_k' c (γ:γt) = (γ, fromMaybe a_k a_k') : foldr (go γt a_k' c) [] pt

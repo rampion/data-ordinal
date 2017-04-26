@@ -1,7 +1,8 @@
+{-# LANGUAGE DeriveFunctor #-}
 module Data.Ordinal.Minus where
 
-{- positive a ? -}
 data Diff a = RightDiff a | NoDiff | LeftDiff a
+  deriving Functor
 
 class Minus a where
   -- |
@@ -9,9 +10,3 @@ class Minus a where
   -- α `minus` β = NoDiff       <=> α = β
   -- α `minus` β = LeftDiff α'  <=> α > β, α = β + β'
   minus :: a -> a -> Diff a
-
-instance Minus Integer where
-  a `minus` b = case a `compare` b of
-      LT -> RightDiff $ b - a
-      EQ -> NoDiff
-      GT -> LeftDiff $ a - b

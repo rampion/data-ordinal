@@ -1,12 +1,15 @@
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
-module Data.Ordinal.Finite where
-import Data.Ordinal.NonNegative
+{-# LANGUAGE PatternSynonyms #-}
+module Data.Ordinal.Finite
+  ( module Data.Ordinal.Finite.Internal
+  , pattern Finite
+  ) where
 
-type Finite = NonNegative Integer
+import qualified Data.Ordinal.Finite.Internal as Internal
+-- hide the dumb constructor and unsafe accessors from the external API
+-- as they could be used to create invariant-breaking values
+import Data.Ordinal.Finite.Internal hiding (Finite, map, apply)
+-- but not the type
+import Data.Ordinal.Finite.Internal (Finite())
 
-class LensFinite a where
-  lensFinite :: Functor f => (Finite -> f Finite) -> a -> f a
-
-instance LensFinite Finite where
-  lensFinite = id
+pattern Finite :: Integer -> Finite
+pattern Finite a <- Internal.Finite a

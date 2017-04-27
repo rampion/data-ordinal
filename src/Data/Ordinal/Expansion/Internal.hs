@@ -13,6 +13,7 @@ import Data.Ordinal.Positive.Internal
 import Data.Ordinal.Minus
 import Data.Ordinal.LPred
 import Data.Ordinal.Pow
+import Data.Ordinal.Zero
 import Data.Ordinal.Lens
 
 -- | The closure of @a U {∞}@ under addition, multiplication, and
@@ -37,8 +38,9 @@ import Data.Ordinal.Lens
 newtype Expansion a = Expansion { getExpansion :: [(Expansion a, Positive a)] }
   deriving (Eq, Ord)
 
-pattern Zero :: Expansion a
-pattern Zero = Expansion []
+instance HasZero (Expansion a) where
+  isZero = null . getExpansion
+  zero = Expansion []
 
 pattern One :: (Eq a, Num a) => Expansion a
 pattern One = Lifted 1

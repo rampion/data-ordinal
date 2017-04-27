@@ -19,6 +19,7 @@ library
                  , Data.Ordinal.Positive.Internal
                  , Data.Ordinal.Expansion
                  , Data.Ordinal.Expansion.Internal
+                 , Data.Ordinal.Zero
                  , Data.Ordinal.Pow
                  , Data.Ordinal.Lens
                  , Data.Ordinal.LPred

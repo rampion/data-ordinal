@@ -45,4 +45,4 @@ Satisfied `implies` x = x
 
 class Wrap t where 
   type Base t b :: Constraint
-  wrap :: Base t b => a `IsSome` t `Of` t b -> b -> t a
+  wrap :: Base t b => a `IsSome` t `Of` b -> b -> t a

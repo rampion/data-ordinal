@@ -18,5 +18,5 @@ instance IsSome a t a where
 instance IsSome a t b => IsSome (t a) t b where
   isSome = I.Inductive isSome
 
-wrap :: (I.Wrap t, I.Base t b, a `IsSome` t `I.Of` t b) => b -> t a
+wrap :: (I.Wrap t, I.Base t b, a `IsSome` t `I.Of` b) => b -> t a
 wrap b = I.wrap isSome b

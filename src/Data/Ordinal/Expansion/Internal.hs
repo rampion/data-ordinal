@@ -1,6 +1,9 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
 module Data.Ordinal.Expansion.Internal where
 
 import Control.Applicative ((<|>))
@@ -15,6 +18,7 @@ import Data.Ordinal.LPred
 import Data.Ordinal.Pow
 import Data.Ordinal.Zero
 import Data.Ordinal.Lens
+import Data.Ordinal.IsSome.Internal
 
 -- | The closure of @a U {∞}@ under addition, multiplication, and
 -- exponentiation.
@@ -41,6 +45,13 @@ newtype Expansion a = Expansion { getExpansion :: [(Expansion a, Positive a)] }
 instance HasZero (Expansion a) where
   isZero = null . getExpansion
   zero = Expansion []
+
+instance Wrap Expansion where
+  type Base Expansion b = HasZero b
+  wrap pf Zero = hasZero pf `implies` Zero where
+    hasZero :: HasZero b => a `IsSome` Expansion `Of` b -> Satisfied '[HasZero] a
+    hasZero = induction $ \Satisfied -> Satisfied
+  wrap pf b = Lifted $ fold Lifted b pf
 
 pattern One :: (Eq a, Num a) => Expansion a
 pattern One = Lifted 1

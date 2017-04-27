@@ -3,6 +3,7 @@ module Data.Ordinal
   , module Positive
   , module Expansion
   -- , module Countable
+  , module IsSome
   , module Zero
   , module Pow
   , module LPred
@@ -14,6 +15,7 @@ module Data.Ordinal
 import Data.Ordinal.Finite as Finite
 import Data.Ordinal.Positive as Positive
 import Data.Ordinal.Expansion as Expansion
+import Data.Ordinal.IsSome as IsSome
 import Data.Ordinal.Zero as Zero
 import Data.Ordinal.Pow as Pow
 import Data.Ordinal.LPred as LPred

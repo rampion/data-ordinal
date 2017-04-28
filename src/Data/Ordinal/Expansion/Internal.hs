@@ -11,14 +11,12 @@ import Control.Arrow (first)
 import Data.Maybe (fromMaybe)
 import Prelude hiding ((^))
 
-import Data.Ordinal.Finite
 import Data.Ordinal.Positive.Internal
 import Data.Ordinal.Minus
 import Data.Ordinal.LPred
 import Data.Ordinal.Pow
 import Data.Ordinal.Zero
 import Data.Ordinal.Lens
-import Data.Ordinal.IsSome.Internal
 
 -- | The closure of @a U {∞}@ under addition, multiplication, and
 -- exponentiation.
@@ -46,13 +44,6 @@ instance HasZero (Expansion a) where
   isZero = null . getExpansion
   zero = Expansion []
 
-instance Wrap Expansion where
-  type Base Expansion b = HasZero b
-  wrap pf Zero = hasZero pf `implies` Zero where
-    hasZero :: HasZero b => a `IsSome` Expansion `Of` b -> Satisfied '[HasZero] a
-    hasZero = induction $ \Satisfied -> Satisfied
-  wrap pf b = Lifted $ fold Lifted b pf
-
 pattern One :: (Eq a, Num a) => Expansion a
 pattern One = Lifted 1
 
@@ -62,20 +53,6 @@ pattern Lifted a = Expansion [(Zero, Positive a)]
 pattern Infinity :: (Eq a, Num a) => Expansion a
 pattern Infinity = Expansion [(One, Positive 1)]
 
-pattern Omega :: Expansion Finite
-pattern Omega = Infinity
-
-ω :: Expansion Finite
-ω = Omega
-
-pattern EpsilonNaught :: Expansion (Expansion Finite)
-pattern EpsilonNaught = Infinity
-
-ε_0 :: Expansion (Expansion Finite)
-ε_0 = EpsilonNaught
-
--- ε_1 = Infinity :: Expansion (Expansion (Expansion Finite))
-
 -- | leading exponent of the base δ expansion of an ordinal (if any)
 degree :: Expansion a -> Maybe (Expansion a)
 degree (Expansion []) = Nothing
@@ -84,10 +61,10 @@ degree (Expansion ((α_k,_):_)) = Just α_k
 instance LensBase Expansion where
   -- | A lens to access the coefficient of @∞ ^ 0@ in the base δ expansion
   -- encoding.
-  lensBase f = fmap Expansion . foldr go (use 0) . getExpansion where
+  lensBase f = fmap Expansion . foldr go (use Zero) . getExpansion where
     use a_0 = f a_0 <&> \case
-      0   -> []
-      b_0 -> [(Zero, Positive b_0)]
+      Zero  -> []
+      b_0   -> [(Zero, Positive b_0)]
     (<&>) = flip fmap
     go (Zero, Positive a_0) = const $ use a_0
     go p = fmap (p:)
@@ -96,7 +73,7 @@ instance LensBase Expansion where
 --    * @(-)@ is partial
 --    * @negate@ is an error
 --    * @fromInteger@ is partial
-instance (Ord a, Num a, Minus a) => Num (Expansion a) where
+instance (Ord a, Num a, Minus a, HasZero a) => Num (Expansion a) where
   -- Without loss of generality, let
   --    > α = α_gt + ∞ ^ γ * a + α_lt
   --    > β = ∞ ^ γ * b + β_lt
@@ -174,7 +151,7 @@ instance LPred a => LPred (Expansion a) where
   lpred (Positive (Lifted a)) = Lifted . lpred $ Positive a
   lpred (Positive α) = α
 
-instance (Ord a, Num a, LPred a, Minus a, Pow a, LensFinite a) => Pow (Expansion a) where
+instance (Ord a, Num a, LPred a, Minus a, Pow a, HasZero a, LensFinite a) => Pow (Expansion a) where
   _ ^ Expansion [] = One
   Expansion [] ^ _ = Zero
 

@@ -14,6 +14,13 @@ module Data.Ordinal.Kleene.Internal where
 import Data.Ordinal.Zero
 import Data.Ordinal.Lens
 
+data HasDerived a where
+  QED :: Derived a => HasDerived a
+
+peekI :: IsKleene a t b -> HasDerived a
+peekI Refl = QED
+peekI (Impl _) = QED
+
 type Derived a = (HasZero a, Ord a, Num a)
 
 -- think of Kleene and IsKleene it as lists of dictionaries in opposite order
@@ -22,9 +29,12 @@ data Kleene t b where
   Pure :: Derived b => b -> Kleene t b
   Wrap :: Derived b => Kleene t (t b) -> Kleene t b
 
-peekKleene :: Kleene t b -> (Derived b => x) -> x
-peekKleene (Pure _) x = x
-peekKleene (Wrap _) x = x
+peekK :: Kleene t b -> HasDerived b
+peekK (Pure _) = QED
+peekK (Wrap _) = QED
+
+checkK :: Kleene t b -> (Derived b => x) -> x
+checkK (peekK -> QED) = id
 
 instance Derived b => HasZero (Kleene t b) where
   isZero (Pure Zero) = True
@@ -35,22 +45,23 @@ instance LensBase t => Eq (Kleene t b) where
   j == k = case j `compare` k of EQ -> True ; _ -> False
 
 instance LensBase t => Ord (Kleene t b) where
-  compare = bicata compare
+  compare = bicata $ \(peekI -> QED) -> compare
 
-bicata :: LensBase t => (forall a. Derived a => a -> a -> x) -> Kleene t b -> Kleene t b -> x
-bicata f (Wrap j) (Wrap k) = bicata f j k
-bicata f (Pure a) (Wrap k) = k `peekKleene` bicata f (Pure $ fromBase a) k
-bicata f (Wrap j) (Pure b) = j `peekKleene` bicata f j (Pure $ fromBase b)
-bicata f (Pure a) (Pure b) = f a b
+bicata :: forall t b x. LensBase t => (forall a. IsKleene a t b -> a -> a -> x) -> Kleene t b -> Kleene t b -> x
+bicata f = \j k -> k `checkK` loop Refl j k where
+  loop :: IsKleene a t b -> Kleene t a -> Kleene t a -> x
+  loop pf (Wrap j) (Wrap k) = k `checkK` loop (Impl pf) j k
+  loop pf (Pure a) (Wrap k) = k `checkK` loop (Impl pf) (Pure $ fromBase a) k
+  loop pf (Wrap j) (Pure b) = j `checkK` loop (Impl pf) j (Pure $ fromBase b)
+  loop pf (Pure a) (Pure b) = f pf a b
+
+op :: LensBase t => (forall a. Derived a => a -> a -> a) -> Kleene t b -> Kleene t b -> Kleene t b
+op (#) j k = fromViewKleene $ bicata (\pf@(peekI -> QED) a b -> simplify pf $ a # b) j k 
 
 instance LensBase t => Num (Kleene t b) where
-  -- j + k = fromViewKleene $ bicata (\a b -> toViewKleene $ a + b) j k
-  Wrap j + Wrap k = Wrap $ j + k
-  Pure a + Wrap k = peekKleene k $ Wrap $ Pure (fromBase a) + k
-  Wrap j + Pure b = peekKleene j $ Wrap $ j + Pure (fromBase b)
-  Pure a + Pure b = Pure $ a + b
-  (*) = undefined
-  (-) = undefined
+  (+) = op (+)
+  (*) = op (*)
+  (-) = op (-) -- use minus instead?
   negate = undefined
   abs = undefined
   signum = undefined
@@ -80,8 +91,7 @@ toViewKleene :: forall a t b. (ToKleene a t b, LensBase t) => a -> ViewKleene t 
 toViewKleene = simplify isKleene
 
 simplify :: LensBase t => IsKleene a t b -> a -> ViewKleene t b
-simplify (Impl pf@Refl) (viewBase -> (a, Zero)) = simplify pf a
-simplify (Impl pf@(Impl _)) (viewBase -> (a, Zero)) = simplify pf a
+simplify (Impl pf@(peekI -> QED)) (viewBase -> (a, Zero)) = simplify pf a
 simplify pf a = ViewKleene pf a
 
 -- | smart constructor
@@ -91,19 +101,16 @@ toKleene = fromViewKleene . toViewKleene
 -- fromViewKleene & fromKleene traverse the list of dictionaries and reverse it
 
 fromViewKleene :: forall t b. ViewKleene t b -> Kleene t b
-fromViewKleene = check where
-  check (ViewKleene pf@Refl a) = wrap pf (Pure a)
-  check (ViewKleene pf@(Impl _) a) = wrap pf (Pure a)
+fromViewKleene = \(ViewKleene pf@(peekI -> QED) a) -> wrap pf (Pure a) where
 
   wrap :: forall x y. IsKleene x t y -> Kleene t x -> Kleene t y
-  wrap (Impl pf@Refl) k = wrap pf (Wrap k)
-  wrap (Impl pf@(Impl _)) k = wrap pf (Wrap k)
+  wrap (Impl pf@(peekI -> QED)) k = wrap pf (Wrap k)
   wrap Refl k = k
 
 fromKleene :: forall t b. Kleene t b -> ViewKleene t b
-fromKleene = \k -> k `peekKleene` unwrap k Refl where
+fromKleene = \k@(peekK -> QED) ->  unwrap k Refl where
   unwrap :: forall x y. Kleene t x -> IsKleene x t y -> ViewKleene t y
-  unwrap (Wrap k) pf = k `peekKleene` unwrap k (Impl pf)
+  unwrap (Wrap k@(peekK -> QED)) pf = unwrap k (Impl pf)
   unwrap (Pure b) pf = ViewKleene pf b
 
 class Derived a => ToKleene a t b where

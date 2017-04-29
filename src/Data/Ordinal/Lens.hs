@@ -37,3 +37,8 @@ fromBase a = runIdentity $ lensBase (\_ -> Identity a) Zero
 --    >   viewBase α' = (0, α')
 viewBase :: (LensBase t, HasZero a) => t a -> (a, t a)
 viewBase = lensBase (,Zero)
+
+toBase :: (LensBase t, HasZero (t a), HasZero a) => t a -> Maybe a
+toBase ta = case viewBase ta of
+  (a, Zero) -> Just a
+  _         -> Nothing

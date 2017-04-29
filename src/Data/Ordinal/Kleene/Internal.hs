@@ -15,6 +15,9 @@ import Data.Functor.Identity (Identity(..))
 
 import Data.Ordinal.Zero
 import Data.Ordinal.Lens
+import Data.Ordinal.LPred
+import Data.Ordinal.Pow
+import Data.Ordinal.Minus
 
 -- | Kleene star as applied to a transformer
 --
@@ -33,11 +36,15 @@ data Context a t b where
 
 -- both Kleene and Context act as lists of dictionaries for
 -- Derived a, but in opposite order
+--
+-- View is like a single-state zipper, where we 
+-- can strip Wrap constructors from a container of Kleene
+-- values, using fromBase on Pure values until they're all Pure
 data View f t b where
   View :: Context a t b -> f a -> View f t b
   
 -- | properties we're interested in preserving
-type Derived a = (HasZero a, Ord a, Num a)
+type Derived a = (HasZero a, Ord a, Num a, LPred a, Pow a, Minus a)
 
 -- | express each value in the container in as few t layers as possible.
 --

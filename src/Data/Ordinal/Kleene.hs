@@ -1,19 +1,31 @@
 {-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Data.Ordinal.Kleene 
   ( module Data.Ordinal.Kleene.Internal
-  , pattern Wrap, pattern ViewKleene
+  , pattern Wrap
   ) where
 
 import qualified Data.Ordinal.Kleene.Internal as Internal
--- hide the dumb constructors from the external API
--- as they could be used to create invariant-breaking values
-import Data.Ordinal.Kleene.Internal hiding (Wrap, ViewKleene)
--- but not the type
-import Data.Ordinal.Kleene.Internal (ViewKleene())
+import Data.Ordinal.Kleene.Internal
+  ( Kleene(Pure)
+  , Derived
+  )
 
 pattern Wrap :: Kleene t (t b) -> Kleene t b
 pattern Wrap k <- Internal.Wrap k
 
-pattern ViewKleene :: IsKleene a t b -> a -> ViewKleene t b
-pattern ViewKleene pf a <- Internal.ViewKleene pf a
+class Derived a => ToKleene a t b where
+  context :: Internal.Context a t b
+
+instance Derived a => ToKleene a t a where
+  context = Internal.Refl
+
+instance (Derived (t a), ToKleene a t b) => ToKleene (t a) t b where
+  context = Internal.Impl context
+
+{-
+view :: (forall a. Derived a => a -> x) -> Kleene t b -> x
+view = undefined
+-}

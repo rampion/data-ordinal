@@ -8,6 +8,7 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE InstanceSigs #-}
 module Data.Ordinal.Kleene.Internal where 
 
 import Prelude hiding (map)
@@ -138,6 +139,13 @@ fromKleene :: LensBase t => Kleene t b -> (forall a. Context a t b -> a -> x) ->
 fromKleene k@(kleene -> QED) f = case openView Refl (Identity k) of
   View pf (Identity a) -> f pf a
 
+instance forall t. LensBase t => LensBase (Kleene t) where
+  lensBase :: forall f b. Functor f => (b -> f b) -> Kleene t b -> f (Kleene t b)
+  lensBase f k = k `fromKleene` \pf a -> toKleene pf <$> loop pf a where
+    loop :: Context a t b -> a -> f a
+    loop (Impl pf@(context -> QED)) = lensBase $! loop pf
+    loop Refl = f
+
 instance Derived b => HasZero (Kleene t b) where
   isZero (Pure Zero) = True
   isZero _ = False
@@ -158,6 +166,15 @@ instance (Derived b, LensBase t) => Num (Kleene t b) where
   abs = map abs
   signum = map signum
   fromInteger = toKleene Refl . fromInteger
+
+instance LPred (Kleene t b) where
+  lpred = undefined
+
+instance Pow (Kleene t b) where
+  (^) = undefined
+
+instance Minus (Kleene t b) where
+  minus = undefined
   
 -- | proof that Derived holds for a
 data HasDerived a where

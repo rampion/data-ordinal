@@ -168,3 +168,8 @@ kleene (Wrap _) = QED
 
 implies :: HasDerived b -> (Derived b => x) -> x
 implies QED = id
+
+-- | have the compiler check that we've successfully derived instances
+-- for all the Derived classes for Kleene, so we can iterate it
+derivesDerived :: (LensBase t, Derived b) => HasDerived (Kleene t b)
+derivesDerived = QED

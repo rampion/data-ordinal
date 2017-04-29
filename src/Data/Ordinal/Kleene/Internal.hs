@@ -11,9 +11,11 @@
 {-# LANGUAGE InstanceSigs #-}
 module Data.Ordinal.Kleene.Internal where 
 
-import Prelude hiding (map)
+import Prelude hiding (map, (^))
 import Data.Functor.Identity (Identity(..))
+import Data.Functor.Const (Const(..))
 
+import Data.Ordinal.Positive.Internal hiding (apply, map)
 import Data.Ordinal.Zero
 import Data.Ordinal.Lens
 import Data.Ordinal.LPred
@@ -122,10 +124,16 @@ openView = \pf fk -> unify pf fk where
 
 data Pair a = Pair a a deriving (Functor, Foldable, Traversable)
 
+applyF :: (Functor f, LensBase t) => (forall a. Derived a => a -> a -> f a) -> Kleene t b -> Kleene t b -> f (Kleene t b)
+applyF op j k@(kleene -> QED) = case openView Refl (Pair j k) of
+  View pf@(context -> QED) (Pair a b) -> toKleene pf <$> (a `op` b)
+
+(#) :: (c -> d) -> (a -> b -> c) -> a -> b -> d
+(#) f g a b = f $ g a b
+
 -- | helper function to extend operations on Derived types to t* b
 apply :: LensBase t => (forall a. Derived a => a -> a -> a) -> Kleene t b -> Kleene t b -> Kleene t b
-apply (#) j k@(kleene -> QED) = case openView Refl (Pair j k) of
-  View pf@(context -> QED) (Pair a b) -> toKleene pf (a # b)
+apply op = runIdentity # applyF (Identity # op)
 
 map :: LensBase t => (forall a. Derived a => a -> a) -> Kleene t b -> Kleene t b
 map f k = k `fromKleene` \pf@(context -> QED) a -> toKleene pf (f a)
@@ -155,8 +163,7 @@ instance LensBase t => Eq (Kleene t b) where
   j == k = case j `compare` k of EQ -> True ; _ -> False
 
 instance LensBase t => Ord (Kleene t b) where
-  compare j k@(kleene -> QED) = case openView Refl (Pair j k) of
-    View (context -> QED) (Pair a b) -> compare a b
+  compare = getConst # applyF (Const # compare)
 
 instance (Derived b, LensBase t) => Num (Kleene t b) where
   (+) = apply (+)
@@ -167,14 +174,14 @@ instance (Derived b, LensBase t) => Num (Kleene t b) where
   signum = map signum
   fromInteger = toKleene Refl . fromInteger
 
-instance LPred (Kleene t b) where
-  lpred = undefined
+instance LensBase t => LPred (Kleene t b) where
+  lpred = map (lpred . Positive) . getPositive
 
-instance Pow (Kleene t b) where
-  (^) = undefined
+instance LensBase t => Pow (Kleene t b) where
+  (^) = apply (^)
 
-instance Minus (Kleene t b) where
-  minus = undefined
+instance LensBase t => Minus (Kleene t b) where
+  minus = applyF minus
   
 -- | proof that Derived holds for a
 data HasDerived a where

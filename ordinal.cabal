@@ -26,9 +26,24 @@ library
                  , Data.Ordinal.Lens
                  , Data.Ordinal.LPred
                  , Data.Ordinal.Minus
-  other-extensions: PatternSynonyms
-                  , TupleSections
+  other-extensions: ConstraintKinds
+                  , DataKinds
+                  , DeriveFunctor
+                  , DeriveTraversable
+                  , FlexibleInstances
+                  , GADTs
+                  , GeneralizedNewtypeDeriving
+                  , IncoherentInstances
+                  , InstanceSigs
                   , LambdaCase
+                  , MultiParamTypeClasses
+                  , PatternSynonyms
+                  , RankNTypes
+                  , ScopedTypeVariables
+                  , TupleSections
+                  , TypeFamilies
+                  , TypeOperators
+                  , ViewPatterns
   build-depends:       base >=4.9 && <4.10
                ,       mtl >= 2.2.1 && < 2.3.0.0
   hs-source-dirs:      src

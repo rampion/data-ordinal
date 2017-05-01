@@ -7,9 +7,7 @@ module Data.Ordinal.Positive
 import qualified Data.Ordinal.Positive.Internal as Internal
 -- hide the dumb constructor and unsafe accessors from the external API
 -- as they could be used to create invariant-breaking values
-import Data.Ordinal.Positive.Internal hiding (Positive, map, apply)
--- but not the type
-import Data.Ordinal.Positive.Internal (Positive())
+import Data.Ordinal.Positive.Internal hiding (pattern Positive, map, apply)
 
-pattern Positive :: a -> Positive a
+pattern Positive :: (Num a, Ord a) => a -> Positive a
 pattern Positive a <- Internal.Positive a

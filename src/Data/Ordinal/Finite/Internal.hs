@@ -1,10 +1,16 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Data.Ordinal.Finite.Internal where
 
-import Prelude hiding (map)
+import Prelude hiding (map, (^))
+import qualified Prelude
+
 import Data.Maybe (fromMaybe)
 
 import Data.Ordinal.Minus
+import Data.Ordinal.Pow
+import Data.Ordinal.Zero
+import Data.Ordinal.LPred
+import Data.Ordinal.Positive
 
 -- | Invariant: Finite x => x >= 0
 newtype Finite = Finite { getFinite :: Integer }
@@ -36,6 +42,17 @@ instance Minus Finite where
       LT -> RightDiff $ b - a
       EQ -> NoDiff
       GT -> LeftDiff $ a - b
+
+instance HasZero Finite where
+  isZero (Finite 0) = True
+  isZero _ = False
+  zero = Finite 0
+
+instance LPred Finite where
+  lpred = map pred . getPositive
+
+instance Pow Finite where
+  (^) = apply (Prelude.^)
 
 apply :: (Integer -> Integer -> Integer) -> Finite -> Finite -> Finite
 apply f (Finite a) (Finite b) = Finite $ f a b

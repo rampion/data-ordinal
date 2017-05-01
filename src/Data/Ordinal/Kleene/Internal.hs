@@ -128,6 +128,7 @@ applyF :: (Functor f, LensBase t) => (forall a. Derived a => a -> a -> f a) -> K
 applyF op j k@(kleene -> QED) = case openView Refl (Pair j k) of
   View pf@(context -> QED) (Pair a b) -> toKleene pf <$> (a `op` b)
 
+-- | a delayed composition operator, useful with @applyF@
 (#) :: (c -> d) -> (a -> b -> c) -> a -> b -> d
 (#) f g a b = f $ g a b
 

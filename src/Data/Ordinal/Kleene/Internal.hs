@@ -1,13 +1,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE InstanceSigs #-}
 module Data.Ordinal.Kleene.Internal where 
 
@@ -27,22 +24,22 @@ import Data.Ordinal.Minus
 -- t* b ~ b | t b | t (t b) | t (t (t b)) | ....
 --
 -- canonical form uses as few t layers as possible
--- e.g. @Pure a@ rather than @Wrap (Wrap (Lifted (Lifted a)))@
+-- e.g. @Point a@ rather than @Lower (Lower (Lifted (Lifted a)))@
 data Kleene t b where
-  Pure :: Derived b => b -> Kleene t b
-  Wrap :: Derived b => Kleene t (t b) -> Kleene t b
+  Point :: Derived b => b -> Kleene t b
+  Lower :: Derived b => Kleene t (t b) -> Kleene t b
 
 -- | proof that a ~ t^k b for some k
 data Context a t b where
-  Refl :: Derived a => Context a t a
-  Impl :: Derived (t a) => Context a t b -> Context (t a) t b
+  Reflexive :: Derived a => Context a t a
+  Inductive :: Derived (t a) => Context a t b -> Context (t a) t b
 
 -- both Kleene and Context act as lists of dictionaries for
 -- Derived a, but in opposite order
 --
 -- View is like a single-state zipper, where we 
--- can strip Wrap constructors from a container of Kleene
--- values, using fromBase on Pure values until they're all Pure
+-- can strip Lower constructors from a container of Kleene
+-- values, using fromBase on Point values until they're all Point
 data View f t b where
   View :: Context a t b -> f a -> View f t b
   
@@ -54,7 +51,7 @@ type Derived a = (HasZero a, Ord a, Num a, LPred a, Pow a, Minus a)
 -- for example, if
 --
 --    pf :: Context (Expansion (Expansion (Expansion b))) Expansion b
---    pf = Impl (Impl (Impl Refl))
+--    pf = Inductive (Inductive (Inductive Reflexive))
 --
 --    fa :: [Expansion (Expansion (Expansion b))]
 --    fa = [Lifted α, Lifted (Lifted β), Lifted (Lifted (Lifted γ)), Zero]
@@ -62,45 +59,46 @@ type Derived a = (HasZero a, Ord a, Num a, LPred a, Pow a, Minus a)
 -- then @(pf', ks) = closeView (View pf fa)@ means
 --
 --    pf' :: Context b Expansion b
---    pf' = Refl
+--    pf' = Reflexive
 --
 --    ks :: [Kleene Expansion b]
---    ks = [Wrap (Wrap (Pure α))), Wrap (Pure β)), Pure γ, Pure Zero]
+--    ks = [Lower (Lower (Point α))), Lower (Point β)), Point γ, Point Zero]
 --
--- note how we're careful to avoid constructing any values that look like @... Wrap (Pure (Lifted ...@
+-- note how we're careful to avoid constructing any values that look like @... Lower (Point (Lifted ...@
 --
 closeView :: forall f t b. (Traversable f, LensBase t) => View f t b -> (Context b t b, f (Kleene t b))
-closeView = \(View pf (fmap (simplify pf) -> fk)) -> (refl pf fk, fk) where
+closeView = \(View pf (fmap (simplify pf) -> fk)) -> (reflexive pf fk, fk) where
 
   -- remove any t layers that don't add information to a value
-  simplify :: forall x y. Context x t y -> x -> Kleene t y
-  simplify (Impl pf@(context -> QED)) (viewBase -> (x, Zero)) = simplify pf x
-  simplify pf@(context -> QED) x = wrap pf (Pure x)
+  simplify :: forall x. Context x t b -> x -> Kleene t b
+  simplify (Inductive pf@(context -> QED)) (viewBase -> (x, Zero)) = simplify pf x
+  simplify pf@(context -> QED) x = lower pf (Point x)
 
-  wrap :: forall x y. Context x t y -> Kleene t x -> Kleene t y
-  wrap (Impl pf@(context -> QED)) k = wrap pf (Wrap k)
-  wrap Refl k = k
+  -- think of this like @Kleene t (t (t ... (t b))) -> Kleene t b@
+  lower :: forall x. Context x t b -> Kleene t x -> Kleene t b
+  lower (Inductive pf@(context -> QED)) k = lower pf (Lower k)
+  lower Reflexive k = k
 
   -- only generate the proof ourselves if the container is empty,
   -- since any value will contain the proof
-  refl :: forall a. Context a t b -> f (Kleene t b) -> Context b t b
-  refl pf = foldr (\(kleene -> QED) _ -> Refl) (unroll pf)
+  reflexive :: forall a. Context a t b -> f (Kleene t b) -> Context b t b
+  reflexive pf = foldr (\(kleene -> QED) _ -> Reflexive) (unroll pf)
 
   unroll :: forall a. Context a t b -> Context b t b
-  unroll Refl = Refl
-  unroll (Impl pf) = unroll pf
+  unroll Reflexive = Reflexive
+  unroll (Inductive pf) = unroll pf
 
 -- | find the smallest k s.t. every value in the container can be expressed as @a ~ t^k b@
 --
 -- for example, if
 --
 --    ks :: [Kleene Expansion b]
---    ks = [Wrap (Wrap (Wrap (Pure α))), Wrap (Wrap (Pure β)), Wrap (Pure γ), Pure Zero]
+--    ks = [Lower (Lower (Lower (Point α))), Lower (Lower (Point β)), Lower (Point γ), Point Zero]
 --
--- then @View pf fa = openView Refl ks@ means
+-- then @View pf fa = openView Reflexive ks@ means
 --
 --    pf :: Context (Expansion (Expansion b)) Expansion b
---    pf = Impl (Impl (Impl Refl))
+--    pf = Inductive (Inductive (Inductive Reflexive))
 --
 --    fa :: [Expansion (Expansion (Expansion b))]
 --    fa = [α, (Lifted β), (Lifted (Lifted γ)), Zero]
@@ -110,22 +108,23 @@ openView = \pf fk -> unify pf fk where
   -- make the container's values all have the same number of t layers
   -- (this is the inverse of "simplifying")
   unify :: forall a'. Context a' t b -> f (Kleene t a') -> View f t b
-  unify pf@(context -> QED) fk = case traverse unpure fk of
-    Left QED -> unify (Impl pf) (unwrap <$> fk)
+  unify pf@(context -> QED) fk = case traverse getPoint fk of
+    -- some value didn't use the @Point@ constructor
+    Left QED -> unify (Inductive pf) (lift <$> fk)
     Right fa -> View pf fa 
 
-  unpure :: forall a. Kleene t a -> Either (HasDerived (t a)) a
-  unpure (Pure a) = Right a
-  unpure (Wrap k) = Left (kleene k)
+  getPoint :: forall a. Kleene t a -> Either (HasDerived (t a)) a
+  getPoint (Point a) = Right a
+  getPoint (Lower k) = Left (kleene k)
 
-  unwrap :: forall a. Derived (t a) => Kleene t a -> Kleene t (t a)
-  unwrap (Wrap k) = k
-  unwrap (Pure a) = Pure (fromBase a)
+  lift :: forall a. Derived (t a) => Kleene t a -> Kleene t (t a)
+  lift (Lower k) = k
+  lift (Point a) = Point (fromBase a)
 
 data Pair a = Pair a a deriving (Functor, Foldable, Traversable)
 
 applyF :: (Functor f, LensBase t) => (forall a. Derived a => a -> a -> f a) -> Kleene t b -> Kleene t b -> f (Kleene t b)
-applyF op j k@(kleene -> QED) = case openView Refl (Pair j k) of
+applyF op j k@(kleene -> QED) = case openView Reflexive (Pair j k) of
   View pf@(context -> QED) (Pair a b) -> toKleene pf <$> (a `op` b)
 
 -- | a delayed composition operator, useful with @applyF@
@@ -145,20 +144,20 @@ toKleene pf a = case closeView (View pf (Identity a)) of (_, Identity k) -> k
 
 -- | catamorphism
 fromKleene :: LensBase t => Kleene t b -> (forall a. Context a t b -> a -> x) -> x
-fromKleene k@(kleene -> QED) f = case openView Refl (Identity k) of
+fromKleene k@(kleene -> QED) f = case openView Reflexive (Identity k) of
   View pf (Identity a) -> f pf a
 
 instance forall t. LensBase t => LensBase (Kleene t) where
   lensBase :: forall f b. Functor f => (b -> f b) -> Kleene t b -> f (Kleene t b)
   lensBase f k = k `fromKleene` \pf a -> toKleene pf <$> loop pf a where
     loop :: Context a t b -> a -> f a
-    loop (Impl pf@(context -> QED)) = lensBase $! loop pf
-    loop Refl = f
+    loop (Inductive pf@(context -> QED)) = lensBase $! loop pf
+    loop Reflexive = f
 
 instance Derived b => HasZero (Kleene t b) where
-  isZero (Pure Zero) = True
+  isZero (Point Zero) = True
   isZero _ = False
-  zero = Pure Zero
+  zero = Point Zero
 
 instance LensBase t => Eq (Kleene t b) where
   j == k = case j `compare` k of EQ -> True ; _ -> False
@@ -173,7 +172,7 @@ instance (Derived b, LensBase t) => Num (Kleene t b) where
   negate = map negate
   abs = map abs
   signum = map signum
-  fromInteger = toKleene Refl . fromInteger
+  fromInteger = toKleene Reflexive . fromInteger
 
 instance LensBase t => LPred (Kleene t b) where
   lpred = map (lpred . Positive) . getPositive
@@ -190,18 +189,18 @@ data HasDerived a where
 
 -- | peek at the head of the Context's list of Derived dictionaries
 context :: Context a t b -> HasDerived a
-context Refl = QED
-context (Impl _) = QED
+context Reflexive = QED
+context (Inductive _) = QED
 
 -- | peek at the head of the Kleene's list of Derived dictionaries
 kleene :: Kleene t b -> HasDerived b
-kleene (Pure _) = QED
-kleene (Wrap _) = QED
+kleene (Point _) = QED
+kleene (Lower _) = QED
 
 implies :: HasDerived b -> (Derived b => x) -> x
 implies QED = id
 
--- | have the compiler check that we've successfully derived instances
--- for all the Derived classes for Kleene, so we can iterate it
+-- | compiler check that we've successfully derived instances for all the
+-- Derived classes for Kleene, so we can iterate it
 derivesDerived :: (LensBase t, Derived b) => HasDerived (Kleene t b)
 derivesDerived = QED

@@ -27,6 +27,7 @@ library
                  , Data.Ordinal.LPred
                  , Data.Ordinal.Minus
                  , Data.Ordinal.Omega
+                 , Data.Ordinal.OmegaOmega
   other-extensions: ConstraintKinds
                   , DataKinds
                   , DeriveFunctor

@@ -12,3 +12,4 @@ import Data.Ordinal.LPred as Ordinal
 import Data.Ordinal.Lens as Ordinal
 import Data.Ordinal.Minus as Ordinal
 import Data.Ordinal.Omega as Ordinal
+import Data.Ordinal.OmegaOmega as Ordinal

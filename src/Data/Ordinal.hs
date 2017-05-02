@@ -1,24 +1,13 @@
 module Data.Ordinal
-  ( module Finite
-  , module Positive
-  , module Expansion
-  -- , module Countable
-  , module IsSome
-  , module Zero
-  , module Pow
-  , module LPred
-  , module Minus
-  , module Lens
-  -- , module Notation
+  ( module Ordinal
   ) where
 
-import Data.Ordinal.Finite as Finite
-import Data.Ordinal.Positive as Positive
-import Data.Ordinal.Expansion as Expansion
-import Data.Ordinal.Kleene as Kleene
-import Data.Ordinal.Zero as Zero
-import Data.Ordinal.Pow as Pow
-import Data.Ordinal.LPred as LPred
-import Data.Ordinal.Lens as Lens
-import Data.Ordinal.Minus as Minus
--- import Data.Ordinal.Notation as Notation
+import Data.Ordinal.Finite as Ordinal
+import Data.Ordinal.Positive as Ordinal
+import Data.Ordinal.Expansion as Ordinal
+import Data.Ordinal.Kleene as Ordinal
+import Data.Ordinal.Zero as Ordinal
+import Data.Ordinal.Pow as Ordinal
+import Data.Ordinal.LPred as Ordinal
+import Data.Ordinal.Lens as Ordinal
+import Data.Ordinal.Minus as Ordinal

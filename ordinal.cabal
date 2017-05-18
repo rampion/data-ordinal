@@ -2,6 +2,7 @@ name:                data-ordinal
 version:             0.1.0.0
 synopsis:            ordinal numbers
 -- description:         ordinal numbers
+homepage:            http://github.com/rampion/data-ordinal
 license:             PublicDomain
 author:              Noah Luck Easterly
 maintainer:          noah.easterly@gmail.com

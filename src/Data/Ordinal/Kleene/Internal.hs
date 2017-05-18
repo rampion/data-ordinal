@@ -44,7 +44,11 @@ data View f t b where
   View :: Context a t b -> f a -> View f t b
   
 -- | properties we're interested in preserving
-type Derived a = (HasZero a, Ord a, Num a, LPred a, Pow a, Minus a)
+type Derived a = (HasZero a, Ord a, Num a, LPred a, Pow a, Minus a, Show a)
+
+instance Show (Kleene t b) where
+  showsPrec p (Lower k) = showParen (p > 9) $ showString "Lower " . showsPrec 10 k
+  showsPrec p (Point b) = showParen (p > 9) $ showString "Point " . showsPrec 10 b
 
 -- | express each value in the container in as few t layers as possible.
 --

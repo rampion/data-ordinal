@@ -38,7 +38,7 @@ import Data.Ordinal.Lens
 -- "base δ expansion". In the case when @a ~ Finite@, it
 -- is also called the "Cantor Normal Form" (CNF)
 newtype Expansion a = Expansion { getExpansion :: [(Expansion a, Positive a)] }
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Show)
 
 instance HasZero (Expansion a) where
   isZero = null . getExpansion

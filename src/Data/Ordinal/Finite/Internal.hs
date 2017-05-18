@@ -14,7 +14,7 @@ import Data.Ordinal.Positive
 
 -- | Invariant: Finite x => x >= 0
 newtype Finite = Finite { getFinite :: Integer }
-  deriving (Eq, Ord, Enum)
+  deriving (Eq, Ord, Enum, Show)
 
 toFinite :: Integer -> Maybe Finite
 toFinite a | a < 0     = Nothing

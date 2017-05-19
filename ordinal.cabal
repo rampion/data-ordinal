@@ -31,8 +31,7 @@ library
                  , Data.Ordinal.OmegaOmega
                  , Data.Ordinal.Epsilon
                  , Data.Ordinal.Epsilon.Internal
-  -- use a private module to break a cycle when defining Show instances
-  other-modules: Data.Ordinal.Expansion.Private 
+                 , Data.Ordinal.Notation
   other-extensions: ConstraintKinds
                   , DataKinds
                   , DeriveFunctor

@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 module Data.Ordinal.OmegaOmega where
+import Data.Typeable
 
 import Data.Ordinal.Finite
 import Data.Ordinal.Expansion.Internal
@@ -48,14 +49,14 @@ instance HasOmegaOmega (Kleene t (Kleene t' b)) => HasOmegaOmega (Expansion (Kle
   ω_ω = Lifted OmegaOmega
 
 -- define instances for @HasOmegaOmega (Klenee (Kleene+ Expansion) (Kleene Expansion Finite))@
-instance (LensBase t, HasOmegaOmega (Kleene t (Kleene Expansion Finite))) => 
+instance (Typeable t, LensBase t, HasOmegaOmega (Kleene t (Kleene Expansion Finite))) => 
     HasOmegaOmega (Kleene (Kleene t) (Kleene Expansion Finite)) where
   isOmegaOmega (Lower (Point OmegaOmega)) = True
   isOmegaOmega _ = False
   ω_ω = Lower (Point OmegaOmega)
 
 -- define instances for @HasOmegaOmega (Klenee (Kleene{2,} Expansion) Finite)@
-instance (LensBase t, HasOmegaOmega (Kleene (Kleene t) Finite)) => 
+instance (Typeable t, LensBase t, HasOmegaOmega (Kleene (Kleene t) Finite)) => 
     HasOmegaOmega (Kleene (Kleene (Kleene t)) Finite) where
   isOmegaOmega (Lower (Point OmegaOmega)) = True
   isOmegaOmega _ = False
@@ -63,7 +64,7 @@ instance (LensBase t, HasOmegaOmega (Kleene (Kleene t) Finite)) =>
 
 -- define instances for @HasOmegaOmega a => HasOmegaOmega (Kleene t a)@, while avoiding
 -- overlap with Kleene (Kleene* Expansion) (Kleene Expansion Finite)
-instance (LensBase t, Derived b, HasOmegaOmega (Kleene (Kleene t) b)) =>
+instance (Typeable t, LensBase t, Derived b, HasOmegaOmega (Kleene (Kleene t) b)) =>
     HasOmegaOmega (Kleene t' (Kleene (Kleene t) b)) where
   isOmegaOmega (Point OmegaOmega) = True
   isOmegaOmega _ = False
@@ -73,7 +74,7 @@ instance (LensFinite a, Derived a, HasOmegaOmega (Kleene Expansion (Expansion a)
   isOmegaOmega (Point OmegaOmega) = True
   isOmegaOmega _ = False
   ω_ω = Point OmegaOmega
-instance (LensBase t, Derived b, HasOmegaOmega (Kleene Expansion (Kleene t b))) => 
+instance (Typeable t, LensBase t, Derived b, HasOmegaOmega (Kleene Expansion (Kleene t b))) => 
     HasOmegaOmega (Kleene t' (Kleene Expansion (Kleene t b))) where
   isOmegaOmega (Point OmegaOmega) = True
   isOmegaOmega _ = False

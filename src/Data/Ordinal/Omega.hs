@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 module Data.Ordinal.Omega where
+import Data.Typeable
 
 import Data.Ordinal.Finite
 import Data.Ordinal.Expansion.Internal
@@ -40,18 +41,18 @@ instance HasOmega (Kleene t b) => HasOmega (Expansion (Kleene t b)) where
   ω = Lifted Omega
 
 -- define instances for @HasOmega (Klenee (Kleene+ Expansion) Finite)@
-instance (LensBase t, HasOmega (Kleene t Finite)) => HasOmega (Kleene (Kleene t) Finite) where
+instance (Typeable t, LensBase t, HasOmega (Kleene t Finite)) => HasOmega (Kleene (Kleene t) Finite) where
   isOmega (Lower (Point Omega)) = True
   isOmega _ = False
   ω = Lower (Point Omega)
 
 -- define instances for @HasOmega a => HasOmega (Kleene t a)@, while avoiding
 -- overlap with Kleene (Kleene* Expansion) Finite
-instance (LensBase t, LensFinite b, Derived b, HasOmega (Expansion b)) => HasOmega (Kleene t (Expansion b)) where
+instance (Typeable t, LensBase t, LensFinite b, Derived b, HasOmega (Expansion b)) => HasOmega (Kleene t (Expansion b)) where
   isOmega (Point Omega) = True
   isOmega _ = False
   ω = Point Omega
-instance (LensBase t, Derived b, HasOmega (Kleene t b)) => HasOmega (Kleene t' (Kleene t b)) where
+instance (Typeable t, LensBase t, Derived b, HasOmega (Kleene t b)) => HasOmega (Kleene t' (Kleene t b)) where
   isOmega (Point Omega) = True
   isOmega _ = False
   ω = Point Omega

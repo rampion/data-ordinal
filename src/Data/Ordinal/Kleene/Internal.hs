@@ -10,6 +10,7 @@
 module Data.Ordinal.Kleene.Internal where 
 
 import Prelude hiding (map, (^))
+import Data.Typeable
 import Data.Functor.Identity (Identity(..))
 import Data.Functor.Const (Const(..))
 
@@ -19,8 +20,6 @@ import Data.Ordinal.Lens
 import Data.Ordinal.LPred
 import Data.Ordinal.Pow
 import Data.Ordinal.Minus
-import Data.Ordinal.Expansion.Private
-import Data.Ordinal.Finite
 
 -- | Kleene star as applied to a transformer
 --
@@ -47,16 +46,11 @@ data View f t b where
   View :: Context a t b -> f a -> View f t b
   
 -- | properties we're interested in preserving
-type Derived a = (HasZero a, Ord a, Num a, LPred a, Pow a, Minus a)
+type Derived a = (Typeable a, Show a, HasZero a, Ord a, Num a, LPred a, Pow a, Minus a)
 
-instance Show (Kleene Expansion Finite) where
-  showsPrec p = loop symbols showsPrec where
-    loop :: [String] -> (Int -> b -> ShowS) ->  Kleene Expansion b -> ShowS
-    loop ~(v:vs) showBase (Lower k) = loop vs (showExpansion v showBase) k
-    loop _ showBase (Point b) = showBase p b
-
-    symbols :: [String]
-    symbols = "ω" : [ "ε_" ++ show n | n <- [0..] :: [Integer] ]
+instance Show (Kleene t b) where
+  showsPrec p (Point b) = showsPrec p b
+  showsPrec p (Lower k) = showsPrec p k
 
 -- | express each value in the container in as few t layers as possible.
 --
@@ -214,5 +208,5 @@ implies QED = id
 
 -- | compiler check that we've successfully derived instances for all the
 -- Derived classes for Kleene, so we can iterate it
-derivesDerived :: (LensBase t, Derived b) => HasDerived (Kleene t b)
+derivesDerived :: (Typeable t, LensBase t, Derived b) => HasDerived (Kleene t b)
 derivesDerived = QED

@@ -12,6 +12,7 @@
 {-# LANGUAGE BangPatterns #-}
 module Data.Ordinal.Epsilon.Internal where
 import Unsafe.Coerce (unsafeCoerce)
+import Data.Typeable
 
 import Data.Ordinal.Finite
 import Data.Ordinal.Expansion.Internal
@@ -204,17 +205,17 @@ instance (Derived a, LensFinite a, HasEpsilon (Expansion (Expansion a))) =>
   type MaxEpsilon (Kleene Expansion (Expansion (Expansion a))) = 'Nothing
   hasEpsilonD = kleeneD hasEpsilonD
 
-instance (Derived b, LensFinite b, LensBase t, HasEpsilon (Expansion (Kleene t b))) =>
+instance (Derived b, LensFinite b, Typeable t, LensBase t, HasEpsilon (Expansion (Kleene t b))) =>
     HasEpsilon (Kleene Expansion (Expansion (Kleene t b))) where
   type MaxEpsilon (Kleene Expansion (Expansion (Kleene t b))) = 'Nothing
   hasEpsilonD = kleeneD hasEpsilonD
 
-instance (Derived b, LensFinite b, LensBase t, HasEpsilon (Kleene t b)) =>
+instance (Derived b, LensFinite b, Typeable t, LensBase t, HasEpsilon (Kleene t b)) =>
     HasEpsilon (Kleene Expansion (Kleene t b)) where
   type MaxEpsilon (Kleene Expansion (Kleene t b)) = 'Nothing
   hasEpsilonD = kleeneD hasEpsilonD
 
-instance (LensBase t, Derived b, MaxEpsilon (Kleene t b) ~ 'Nothing, HasEpsilon (Kleene t b)) =>
+instance (Typeable t, LensBase t, Derived b, MaxEpsilon (Kleene t b) ~ 'Nothing, HasEpsilon (Kleene t b)) =>
     HasEpsilon (Kleene (Kleene t) b) where
   type MaxEpsilon (Kleene (Kleene t) b) = 'Nothing
   hasEpsilonD = HasEpsilonD

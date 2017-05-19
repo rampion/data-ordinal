@@ -6,6 +6,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Data.Ordinal.Kleene.Internal where 
 
 import Prelude hiding (map, (^))
@@ -18,6 +19,8 @@ import Data.Ordinal.Lens
 import Data.Ordinal.LPred
 import Data.Ordinal.Pow
 import Data.Ordinal.Minus
+import Data.Ordinal.Expansion.Private
+import Data.Ordinal.Finite
 
 -- | Kleene star as applied to a transformer
 --
@@ -44,11 +47,16 @@ data View f t b where
   View :: Context a t b -> f a -> View f t b
   
 -- | properties we're interested in preserving
-type Derived a = (HasZero a, Ord a, Num a, LPred a, Pow a, Minus a, Show a)
+type Derived a = (HasZero a, Ord a, Num a, LPred a, Pow a, Minus a)
 
-instance Show (Kleene t b) where
-  showsPrec p (Lower k) = showParen (p > 9) $ showString "Lower " . showsPrec 10 k
-  showsPrec p (Point b) = showParen (p > 9) $ showString "Point " . showsPrec 10 b
+instance Show (Kleene Expansion Finite) where
+  showsPrec p = loop symbols showsPrec where
+    loop :: [String] -> (Int -> b -> ShowS) ->  Kleene Expansion b -> ShowS
+    loop ~(v:vs) showBase (Lower k) = loop vs (showExpansion v showBase) k
+    loop _ showBase (Point b) = showBase p b
+
+    symbols :: [String]
+    symbols = "ω" : [ "ε_" ++ show n | n <- [0..] :: [Integer] ]
 
 -- | express each value in the container in as few t layers as possible.
 --

@@ -14,11 +14,14 @@ import Data.Ordinal.Positive
 
 -- | Invariant: Finite x => x >= 0
 newtype Finite = Finite { getFinite :: Integer }
-  deriving (Eq, Ord, Enum, Show)
+  deriving (Eq, Ord, Enum)
 
 toFinite :: Integer -> Maybe Finite
 toFinite a | a < 0     = Nothing
            | otherwise = Just $ Finite a
+
+instance Show Finite where
+  showsPrec p = showsPrec p . getFinite
 
 -- | Incomplete: Finite is only a near-semiring
 --    * @(-)@ is partial

@@ -8,7 +8,7 @@ import Data.Ordinal.Pow
 
 -- | Invariant: Positive a => a > 0
 newtype Positive a = Positive { getPositive :: a }
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord)
 
 toPositive :: (Num a, Ord a) => a -> Maybe (Positive a)
 toPositive a | a <= 0    = Nothing

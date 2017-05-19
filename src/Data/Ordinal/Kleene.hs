@@ -9,7 +9,7 @@
 module Data.Ordinal.Kleene 
   ( I.Kleene(I.Point), pattern Lower, lower
   , I.Derived
-  , IsKleene(), toKleene, FromKleene(..), fromKleene
+  , IsKleene(..), toKleene, FromKleene(..), fromKleene
   ) where
 
 import qualified Data.Ordinal.Kleene.Internal as I

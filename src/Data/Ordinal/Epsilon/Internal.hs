@@ -171,7 +171,7 @@ instance (Derived b, LensBase t, HasEpsilon (Kleene t b)) => HasEpsilon (Expansi
   type MaxEpsilon (Expansion (Kleene t b)) = MSucc (MaxEpsilon (Kleene t b))
   hasEpsilonD = expansionD hasEpsilonD
 
-instance (Derived b, LensBase t, HasEpsilon (Expansion (Kleene t b))) =>
+instance (Derived b, LensFinite b, LensBase t, HasEpsilon (Expansion (Kleene t b))) =>
     HasEpsilon (Expansion (Expansion (Kleene t b))) where
   type MaxEpsilon (Expansion (Expansion (Kleene t b))) = MSucc (MaxEpsilon (Expansion (Kleene t b)))
   hasEpsilonD = expansionD hasEpsilonD

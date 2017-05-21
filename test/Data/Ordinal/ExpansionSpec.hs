@@ -58,7 +58,7 @@ spec = do
 
   describe "Pow (Expansion Finite)" $ do
     opDescribe (^) "^" 8
-      [ (ω, ω, Expansion [(ω,1)] :: Expansion Finite) -- fails
+      [ (ω, ω, Expansion [(ω,1)] :: Expansion Finite)
       ]
 
   describe "Num (Expansion (Expansion Finite))" $ do

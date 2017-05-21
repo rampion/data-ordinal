@@ -96,7 +96,7 @@ instance LensBase Expansion where
 --    * @(-)@ is partial
 --    * @negate@ is an error
 --    * @fromInteger@ is partial
-instance (Ord a, Num a, Minus a, HasZero a) => Num (Expansion a) where
+instance (Ord a, Num a, Minus a, LensFinite a, HasZero a) => Num (Expansion a) where
   -- Without loss of generality, let
   --    > α = α_gt + ∞ ^ γ * a + α_lt
   --    > β = ∞ ^ γ * b + β_lt
@@ -130,12 +130,16 @@ instance (Ord a, Num a, Minus a, HasZero a) => Num (Expansion a) where
   Expansion [] * _ = Zero
   Expansion ((α_k,a_k):pt) * Expansion qs = Expansion $ foldr go [] qs where
     -- α * b_0
-    --  = (∞ ^ α_k * a_k + α') * b_0
-    --  = (∞ ^ α_k * a_k + α') + (∞ ^ α_k * a_k + α') + ... + (∞ ^ α_k * a_k + α')
-    --  = ∞ ^ α_k * a_k + (α' + ∞ ^ α_k * a_k) + (α' + ... + ∞ ^ α_k * a_k) + α'
-    --  = ∞ ^ α_k * a_k + ∞ ^ α_k * a_k + ... + ∞ ^ α_k * a_k + α'
-    --  = ∞ ^ α_k * a_k * b_0 + α'
-    go (Zero, b_0) _ = (α_k, a_k * b_0) : pt
+    --  = α * (b_0' + n)
+    --  = α * b_0' + α * n
+    --  = (∞ ^ α_k * a_k + α') * b_0' + (∞ ^ α_k * a_k + α') * n
+    --  = ∞ ^ α_k * a_k * b_0' + ∞ ^ α_k * a_k * n + α' * (n > 0)
+    --  = ∞ ^ α_k * a_k * (b_0' + n) + α' * (n > 0)
+    --  = ∞ ^ α_k * a_k * b_0 + α' * (n > 0)
+    go (Zero, b_0) ~[] = (α_k, a_k * b_0) : case viewFinite (getPositive b_0) of 
+      (0, _)  -> [] 
+      _       -> pt
+
     -- α * ∞ ^ β_i * b_i
     --  = (∞ ^ α_k * a_k + α') * ∞ ^ β_i * b_i
     --  = (∞ ^ α_k * a_k + α') + (∞ ^ α_k * a_k + α') + ... 
@@ -146,9 +150,6 @@ instance (Ord a, Num a, Minus a, HasZero a) => Num (Expansion a) where
     --  = ∞ ^ α_k * ∞ ^ β_i * b_i
     --  = ∞ ^ (α_k + β_i) * b_i
     go (β_i, b_i) vs = (α_k + β_i, b_i) : vs
-    -- XXX: above should use LensFinite rather than LensBase as
-    --
-    --  (ε0 + 1) * ω = ε0 * ω /= ε0 * ω + ω
 
   α - β = case α `minus` β of
     RightDiff _ -> error "subtraction is not closed on Expansion numbers"

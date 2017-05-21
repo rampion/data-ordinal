@@ -10,14 +10,13 @@
 module Data.Ordinal.Expansion.Internal where
 
 import Control.Applicative ((<|>))
-import Control.Arrow (first)
+import Control.Arrow (first, second)
 import Data.Maybe (fromMaybe)
 import Data.Typeable
 import Prelude hiding ((^))
 
 import Data.Ordinal.Positive.Internal
 import Data.Ordinal.Minus
-import Data.Ordinal.LPred
 import Data.Ordinal.Pow
 import Data.Ordinal.Zero
 import Data.Ordinal.Lens
@@ -174,11 +173,7 @@ instance (Ord a, Minus a) => Minus (Expansion a) where
         LeftDiff c  -> LeftDiff . Expansion $ (α_i, c) : pt
         NoDiff -> Expansion pt `minus` Expansion qt
 
-instance LPred a => LPred (Expansion a) where
-  lpred (Positive (Lifted a)) = Lifted . lpred $ Positive a
-  lpred (Positive α) = α
-
-instance (Ord a, Num a, LPred a, Minus a, Pow a, HasZero a, LensFinite a) => Pow (Expansion a) where
+instance (Ord a, Num a, Minus a, Pow a, HasZero a, LensFinite a) => Pow (Expansion a) where
   _ ^ Expansion [] = One
   Expansion [] ^ _ = Zero
 
@@ -188,14 +183,16 @@ instance (Ord a, Num a, LPred a, Minus a, Pow a, HasZero a, LensFinite a) => Pow
   -- a ^ (Infinity * β' + b)
   --  = (a ^ Infinity) ^ β' * (a ^ b)
   --  = Infinity ^ β' * (a ^ b)
-  Lifted a ^ β = Expansion [(Expansion qs', Positive $ a ^ b)] where
+  Lifted a ^ Expansion qs = Expansion [(Expansion qs', c)] where
+    (qs', c) = foldr go ([], 1) qs
     -- β = (Expansion qs)@(∞ ^ β_k * b_k + ... + ∞ ^ β_1 * b_1) + b
-    (b, Expansion qs) = viewBase β
     -- β' = ∞ ^ β_k' * b_k + ... + ∞ ^ β_1' * b_1
     --  where 1 + β_i' = β_i
-    qs' = first (lpred . Positive) <$> qs
+    go q@(β_i, b_i) = case lensFinite (,1) β_i of 
+      (0, Zero) -> second . const $ Positive a ^ b_i
+      (n, Zero) -> first ((fromFinite (n - 1) , b_i):)
+      _         -> first (q:)
 
-  -- 
   Expansion ((α_k,a_k):pt) ^ β = Expansion $ loop Nothing (Positive 1) γs where
     γs = (α_k *) <$> lensFinite (\z -> [z, z-1 .. 0]) β
 

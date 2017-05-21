@@ -14,10 +14,8 @@ import Data.Typeable
 import Data.Functor.Identity (Identity(..))
 import Data.Functor.Const (Const(..))
 
-import Data.Ordinal.Positive.Internal hiding (apply, map)
 import Data.Ordinal.Zero
 import Data.Ordinal.Lens
-import Data.Ordinal.LPred
 import Data.Ordinal.Pow
 import Data.Ordinal.Minus
 
@@ -46,7 +44,7 @@ data View f t b where
   View :: Context a t b -> f a -> View f t b
   
 -- | properties we're interested in preserving
-type Derived a = (Typeable a, Show a, HasZero a, Ord a, Num a, LPred a, Pow a, Minus a)
+type Derived a = (Typeable a, Show a, HasZero a, Ord a, Num a, Pow a, Minus a)
 
 instance Show (Kleene t b) where
   showsPrec p (Point b) = showsPrec p b
@@ -179,9 +177,6 @@ instance (Derived b, LensBase t) => Num (Kleene t b) where
   abs = map abs
   signum = map signum
   fromInteger = toKleene Reflexive . fromInteger
-
-instance LensBase t => LPred (Kleene t b) where
-  lpred = map (lpred . Positive) . getPositive
 
 instance LensBase t => Pow (Kleene t b) where
   (^) = apply (^)

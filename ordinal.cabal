@@ -25,7 +25,6 @@ library
                  , Data.Ordinal.Zero
                  , Data.Ordinal.Pow
                  , Data.Ordinal.Lens
-                 , Data.Ordinal.LPred
                  , Data.Ordinal.Minus
                  , Data.Ordinal.Omega
                  , Data.Ordinal.OmegaOmega

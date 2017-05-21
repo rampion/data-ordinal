@@ -9,8 +9,6 @@ import Data.Maybe (fromMaybe)
 import Data.Ordinal.Minus
 import Data.Ordinal.Pow
 import Data.Ordinal.Zero
-import Data.Ordinal.LPred
-import Data.Ordinal.Positive
 
 -- | Invariant: Finite x => x >= 0
 newtype Finite = Finite { getFinite :: Integer }
@@ -50,9 +48,6 @@ instance HasZero Finite where
   isZero (Finite 0) = True
   isZero _ = False
   zero = Finite 0
-
-instance LPred Finite where
-  lpred = map pred . getPositive
 
 instance Pow Finite where
   (^) = apply (Prelude.^)

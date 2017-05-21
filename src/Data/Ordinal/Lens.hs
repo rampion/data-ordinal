@@ -3,7 +3,7 @@
 module Data.Ordinal.Lens where
 import Data.Functor.Identity (Identity(..))
 
-import Data.Ordinal.Finite
+import Data.Ordinal.Finite.Internal
 import Data.Ordinal.Zero
 
 class LensFinite a where
@@ -21,6 +21,16 @@ instance LensFinite Finite where
 
 instance (LensFinite a, HasZero a, LensBase t) => LensFinite (t a) where
   lensFinite = lensBase . lensFinite
+
+fromFinite :: (HasZero a, LensFinite a) => Finite -> a
+fromFinite n = runIdentity $ lensFinite (\_ -> Identity n) Zero
+
+-- | Invariant: 
+--    > viewFinite α = (a, α') =>
+--    >   α' + fromFinite a = α AND
+--    >   viewFinite α' = (0, α')
+viewFinite :: LensFinite a => a -> (Finite, a)
+viewFinite = lensFinite (,Finite 0)
 
 class LensBase t where
   -- | manipulate the base-a component of a ordinal number transformer

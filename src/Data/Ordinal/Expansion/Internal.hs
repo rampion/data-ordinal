@@ -16,6 +16,7 @@ import Data.Typeable
 import Prelude hiding ((^))
 
 import Data.Ordinal.Positive.Internal
+import Data.Ordinal.Finite.Internal
 import Data.Ordinal.Minus
 import Data.Ordinal.Pow
 import Data.Ordinal.Zero
@@ -195,7 +196,7 @@ instance (Ord a, Num a, Minus a, Pow a, HasZero a, LensFinite a) => Pow (Expansi
       _         -> first (q:)
 
   Expansion ((α_k,a_k):pt) ^ β = Expansion $ loop Nothing (Positive 1) γs where
-    γs = (α_k *) <$> lensFinite (\z -> [z, z-1 .. 0]) β
+    γs = (α_k *) <$> lensFinite (\(Finite i) -> Finite <$> [i, i-1 .. 0]) β
 
     loop _ c [γ] = [(γ, c)]
     loop a_k' c (γ:γt) = (γ, fromMaybe a_k a_k') : foldr (go γt a_k' c) [] pt

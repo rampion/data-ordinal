@@ -50,10 +50,8 @@ spec = do
       , (2, ω, ω)
       , (ω ^ 2, ω, ω ^ 3)
       , (ω, ω ^ 2, ω ^ 3)
-      , (Expansion [(ω,1)], ω, Expansion [(ω + 1,1)])
-      -- , (ω ^ ω, ω, Expansion [(ω + 1,1)]) -- error!
-      , (ω, Expansion [(ω,1)], Expansion [(ω,1)])
-      -- , (ω, ω ^ ω, ω ^ ω) -- error!
+      , (ω ^ ω, ω, ω ^ (ω + 1))
+      , (ω, ω ^ ω, ω ^ ω)
       ] 
 
   describe "Pow (Expansion Finite)" $ do
@@ -63,5 +61,5 @@ spec = do
 
   describe "Num (Expansion (Expansion Finite))" $ do
     opDescribe (*) "*" 7
-      [ (ε SZero + 1, ω, ε SZero * ω :: Expansion (Expansion Finite)) -- fails
+      [ (ε SZero + 1, ω, ε SZero * ω :: Expansion (Expansion Finite))
       ]

@@ -4,6 +4,55 @@ module Data.Ordinal.Notation where
 import Control.Arrow (first)
 import Data.Typeable
 
+{-
+When printing a limit symbol, we use the simplest type for that limit.
+
+For all the Ordinal numbers this package constructs, the simplest types will
+match the regular expression
+
+  E*(K+E)*F
+
+Using `Ex` to mean `Expansion (x)`, `K+E` for `Kleene (K*E)`, and `K*E` for
+`Expansion | K+E`.
+
+With the added condition that the 'Kleene's are in a ascending sequence, e.g.
+
+  (K{m}E)(K{n}E) => m < n
+
+For example
+
+  Finite
+  Expansion Finite
+  Expansion (Expansion Finite)
+  Expansion (Expansion (Expansion Finite))
+  Kleene Expansion Finite
+  Kleene (Kleene Expansion) Finite
+  Kleene (Kleene (Kleene Expansion)) Finite
+  Kleene Expansion (Kleene (Kleene (Kleene Expansion)) Finite)
+  Expansion (Expansion (Kleene Expansion (Kleene (Kleene (Kleene Expansion)) Finite)))
+
+Let t =~ t' mean t and t' are isomorphic.
+
+Lemma:
+  Kleene t b =~ Kleene t (t b) iff b is a subset of t b
+
+Claim:
+  (K{n}E)(K{m}E)B =~ (K{n}E)B for n > m
+
+Proof by induction on n - m:
+
+  n - m = 1 
+    ~ by Lemma, with t ~ K{m}E
+
+  Given true for n - m = d
+
+    (K{m+d+1}E)(K{m}E)B
+      =~ (K{m+d+1}E)(K{m+d})(K{m}E)B -- by definition
+      =~ (K{m+d+1}E)(K{m+d})B -- by induction
+      =~ (K{m+d+1}E)B -- by lemma
+
+-}
+
 type To x = Maybe (Int, TyCon) -> Maybe ([Int], TyCon, TypeRep) -> TypeRep -> x
 
 notation :: Typeable a => proxy a -> Int -> ShowS
@@ -48,6 +97,7 @@ notation = \proxy -> parse (typeRep proxy) getName where
     (True, n, []) -> const . showString $ "ε_" ++ show (n - 1)
     (True, 0, [0]) -> const $ showString "ω_ω"
     _              -> 
+      -- TODO: is @ better than ::
       let name = "Infinity @" ++ showsPrec 10 (unroll mn mks b) ""
       in \p -> showParen (p >= 10) $ showString name
 

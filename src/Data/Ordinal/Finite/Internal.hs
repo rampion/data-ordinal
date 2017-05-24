@@ -29,9 +29,9 @@ instance Num Finite where
   (+) = apply (+)
   (*) = apply (*)
   a - b = case a `minus` b of
-    RightDiff _ -> error "subtraction is not closed on Finite numbers"
-    NoDiff      -> Finite 0
-    LeftDiff c  -> c
+    LessThanBy _ -> error "subtraction is not closed on Finite numbers"
+    EqualTo      -> Finite 0
+    GreaterThanBy c  -> c
   negate = error "negation is not defined for Finite numbers"
   abs = id
   signum = map signum
@@ -40,9 +40,9 @@ instance Num Finite where
 
 instance Minus Finite where
   Finite a `minus` Finite b = Finite <$> case a `compare` b of
-      LT -> RightDiff $ b - a
-      EQ -> NoDiff
-      GT -> LeftDiff $ a - b
+      LT -> LessThanBy $ b - a
+      EQ -> EqualTo
+      GT -> GreaterThanBy $ a - b
 
 instance HasZero Finite where
   isZero (Finite 0) = True

@@ -153,9 +153,9 @@ instance (Ord a, Num a, Minus a, LensFinite a, HasZero a) => Num (Expansion a) w
     go (β_i, b_i) vs = (α_k + β_i, b_i) : vs
 
   α - β = case α `minus` β of
-    RightDiff _ -> error "subtraction is not closed on Expansion numbers"
-    NoDiff      -> Zero
-    LeftDiff γ  -> γ
+    LessThanBy _ -> error "subtraction is not closed on Expansion numbers"
+    EqualTo      -> Zero
+    GreaterThanBy γ  -> γ
 
   negate = error "negation is not defined for Expansion numbers"
   abs = id
@@ -164,16 +164,16 @@ instance (Ord a, Num a, Minus a, LensFinite a, HasZero a) => Num (Expansion a) w
   fromInteger n = fromBase $ fromInteger n  where
 
 instance (Ord a, Minus a) => Minus (Expansion a) where
-  Expansion [] `minus` Expansion [] = NoDiff
-  Expansion [] `minus` β = RightDiff β
-  α `minus` Expansion [] = LeftDiff α
+  Expansion [] `minus` Expansion [] = EqualTo
+  Expansion [] `minus` β = LessThanBy β
+  α `minus` Expansion [] = GreaterThanBy α
   Expansion ps@((α_i, a_i):pt) `minus` Expansion qs@((β_j, b_j):qt) = case α_i `compare` β_j of
-      LT -> RightDiff $ Expansion qs
-      GT -> LeftDiff $ Expansion ps 
+      LT -> LessThanBy $ Expansion qs
+      GT -> GreaterThanBy $ Expansion ps 
       EQ -> case a_i `minus` b_j of
-        RightDiff c -> RightDiff . Expansion $ (β_j, c) : qt
-        LeftDiff c  -> LeftDiff . Expansion $ (α_i, c) : pt
-        NoDiff -> Expansion pt `minus` Expansion qt
+        LessThanBy c -> LessThanBy . Expansion $ (β_j, c) : qt
+        GreaterThanBy c  -> GreaterThanBy . Expansion $ (α_i, c) : pt
+        EqualTo -> Expansion pt `minus` Expansion qt
 
 instance (Ord a, Num a, Minus a, Pow a, HasZero a, LensFinite a) => Pow (Expansion a) where
   _ ^ Expansion [] = One

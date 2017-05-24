@@ -22,7 +22,7 @@ instance (Num a, Ord a, Minus a) => Num (Positive a) where
   (+) = apply (+)
   (*) = apply (*)
   a - b = case a `minus` b of 
-    LeftDiff c -> c
+    GreaterThanBy c -> c
     _ -> error "subtraction is not closed on Positive numbers"
   negate = error "negation is not defined for Positive numbers"
   abs = id
@@ -35,9 +35,9 @@ instance Pow a => Pow (Positive a) where
 
 instance Minus a => Minus (Positive a) where
   Positive a `minus` Positive b = case a `minus` b of
-    RightDiff c -> RightDiff $ Positive c
-    NoDiff      -> NoDiff
-    LeftDiff c  -> LeftDiff $ Positive c
+    LessThanBy c -> LessThanBy $ Positive c
+    EqualTo      -> EqualTo
+    GreaterThanBy c  -> GreaterThanBy $ Positive c
 
 apply :: (a -> a -> a) -> Positive a -> Positive a -> Positive a
 apply f (Positive a) (Positive b) = Positive $ f a b

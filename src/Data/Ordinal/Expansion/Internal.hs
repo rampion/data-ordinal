@@ -7,18 +7,20 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns #-}
 module Data.Ordinal.Expansion.Internal where
 
 import Control.Applicative ((<|>))
 import Control.Arrow (first, second)
 import Data.Maybe (fromMaybe)
 import Data.Typeable
-import Prelude hiding ((^))
+import Prelude hiding ((^), quotRem)
 
 import Data.Ordinal.Positive.Internal
 import Data.Ordinal.Finite.Internal
 import Data.Ordinal.Minus
-import Data.Ordinal.Pow
+import Data.Ordinal.Pow -- maybe use SubHask?
+import Data.Ordinal.QuotRem
 import Data.Ordinal.Zero
 import Data.Ordinal.Lens
 import Data.Ordinal.Notation
@@ -162,6 +164,102 @@ instance (Ord a, Num a, Minus a, LensFinite a, HasZero a) => Num (Expansion a) w
   signum Zero = Zero
   signum _ = One
   fromInteger n = fromBase $ fromInteger n  where
+
+-- α `quotRem` β = (γ, δ)
+-- α = β * γ + δ
+--
+instance (Minus a, HasZero a, LensFinite a, Ord a, QuotRem a) => QuotRem (Expansion a) where
+  _ `quotRem` Expansion [] = error "division by zero"
+  α `quotRem` Expansion (q@(β_j, Positive b_j):qt) = loop $ getExpansion α where
+
+    -- Notation:
+    --    α = ∞ ^ α_i * a_i + α' = Expansion ps
+    --      where α' < ∞ ^ α_i
+    --    β = ∞ ^ β_j * b_j + β' = Expansion qs
+    --      where β' < ∞ ^ β_j
+    --
+    --    (α / β, α % β) = α `quotRem` β
+    --      where α = β * (α / β) + (α % β)
+    --        and α % β < β
+    --
+    loop ps@((α_i, Positive a_i):pt) = case α_i `minus` β_j of
+      GreaterThanBy γ -> -- => α_i = β_j + γ, γ > 0
+        -- => β * ∞ ^ γ
+        --    = (∞ ^ β_j * b_j + β') * ∞ ^ γ
+        --    = ∞ ^ (β_j + γ)
+        --    = ∞ ^ α_i
+        -- => α = β * (∞ ^ γ * a_i + α' / β) + α' % β
+        case loop pt of ~(Expansion rs, δ) -> (Expansion $ (γ, Positive a_i):rs, δ)
+      LessThanBy _ -> -- => β_j = α_i + γ, γ > 0
+        -- => α_i < β_j
+        -- => α < β
+        -- => (α / β, α % β) = (0, α)
+        (Zero, Expansion ps)
+      EqualTo -> -- => α_i = β_j
+        case a_i `quotRem` b_j of
+          (Zero, _) -> -- => a_k < b_j
+            -- => α < β
+            -- => (α / β, α % β) = (0, α)
+            (Zero, Expansion ps)
+          (c, Zero) -> -- => a_k = b_j * c
+            case lensFinite (\case 0 -> Nothing ; n -> Just (n-1)) c of
+              Just c' -> -- => c is partially finite (i.e. there exists c' s.t. c' + 1 = c)
+                case Expansion pt `minus` Expansion qt of
+                  EqualTo -> -- => β' = α'
+                    -- => β * c
+                    --    = (∞ ^ α_i * b_j + α') * c
+                    --    = ∞ ^ α_i * (b_j * c) + α' [c is partially finite]
+                    --    = ∞ ^ α_i * a_i + α'
+                    --    = α
+                    --  => (α / β, α % β) = (c, 0)
+                    (Lifted c, Zero)
+                  GreaterThanBy δ -> -- => α' = β' + δ, δ > 0
+                    -- => β * c + δ
+                    --    = (∞ ^ α_i * b_j + β') * c + δ
+                    --    = ∞ ^ α_i * (b_j * c) + β' + δ [c is partially finite]
+                    --    = ∞ ^ α_i * a_i + α'
+                    --    = α
+                    --  => (α / β, α % β) = (c, δ)
+                    (Lifted c, δ)
+                  LessThanBy _ -> -- => β' = α' + δ, δ > 0
+                    if c' == Zero
+                      then  -- => c = 1
+                            -- => a_i = b_j
+                            -- => α < β
+                            -- => (α / β, α % β) = (0, α)
+                            (Zero, Expansion ps)
+                      else  -- => c' > 0
+                            -- => β * c' + (∞ ^ α_i + α')
+                            --    = (∞ ^ α_i * b_j + β') * c' + (∞ ^ α_i * b_j + α')
+                            --    = (∞ ^ α_i * (b_j * c') + ...) + (∞ ^ α_i * b_j + α')
+                            --    = ∞ ^ α_i * (b_j * c' + b_j) + α'
+                            --    = ∞ ^ α_i * (b_j * (c' + 1)) + α'
+                            --    = ∞ ^ α_i * (b_j * c) + α'
+                            --    = ∞ ^ α_i * a_j + α'
+                            --    = α
+                            -- => (α / β, α % β) = (c', ∞ ^ α_i * b_j + α')
+                            (Lifted c', Expansion $ q:pt)
+
+                  -- lensFinite (\case 0 -> Nothing ; n -> Just (n - 1)) ~ Maybe (c - 1)
+              Nothing -> -- => c is purely transfinite (i.e. there is no c' s.t. c' + 1 = c)
+                -- => β * c
+                --    = (∞ ^ α_i * b_j + β') * c
+                --    = ∞ ^ α_i * (b_j * c) [c is purely transfinite]
+                --    = ∞ ^ α_i * (b_j * c)
+                --    = ∞ ^ α_i * a_k
+                -- => (α / β, α % β) = (c, α')
+                (Lifted c, Expansion pt)
+          (c, d) ->
+            -- => α_i = β_j, a_k = b_j * c + d, c > 0, d > 0
+            -- => β * c + (∞ ^ α_i * d + α')
+            --    = (∞ ^ α_i * b_j + β') * c + (∞ ^ α_i * d + α')
+            --    = (∞ ^ α_i * (b_j * c) + β')  + (∞ ^ α_i * d + α')
+            --    = ∞ ^ α_i * (b_j * c + d) + α'
+            --    = ∞ ^ α_i * a_k + α'
+            --    = α
+            -- => (α / β, α % β) = (c, ∞ ^ α_i * d + α')
+            (Lifted c, Expansion $ (α_i,Positive d):pt)
+    loop [] = (Zero,Zero)
 
 instance (Ord a, Minus a) => Minus (Expansion a) where
   Expansion [] `minus` Expansion [] = EqualTo

@@ -1,13 +1,14 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Data.Ordinal.Finite.Internal where
 
-import Prelude hiding (map, (^))
+import Prelude hiding (map, (^), quotRem)
 import qualified Prelude
 
 import Data.Maybe (fromMaybe)
 
 import Data.Ordinal.Minus
 import Data.Ordinal.Pow
+import Data.Ordinal.QuotRem
 import Data.Ordinal.Zero
 
 -- | Invariant: Finite x => x >= 0
@@ -51,6 +52,10 @@ instance HasZero Finite where
 
 instance Pow Finite where
   (^) = apply (Prelude.^)
+
+instance QuotRem Finite where
+  Finite n `quotRem` Finite d = case n `Prelude.quotRem` d of
+    ~(q,r) -> (Finite q, Finite r)
 
 apply :: (Integer -> Integer -> Integer) -> Finite -> Finite -> Finite
 apply f (Finite a) (Finite b) = Finite $ f a b

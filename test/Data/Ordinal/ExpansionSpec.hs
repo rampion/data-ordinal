@@ -1,6 +1,7 @@
+{-# LANGUAGE TypeApplications #-}
 module Data.Ordinal.ExpansionSpec where
 
-import Prelude hiding ((^))
+import Prelude hiding ((^), quotRem)
 import Control.Monad (mapM_)
 
 import Test.Hspec
@@ -8,12 +9,13 @@ import Test.Hspec
 import Data.Ordinal.Expansion
 import Data.Ordinal.Finite
 import Data.Ordinal.Pow
+import Data.Ordinal.QuotRem
 import Data.Ordinal.Omega
 import Data.Ordinal.Epsilon
 
 spec :: Spec
 spec = do
-  let opTest :: (Eq a, Show a) => (a -> a -> a) -> String -> Int -> (a,a,a) -> SpecWith ()
+  let opTest :: (Show a, Show b, Eq c, Show c) => (a -> b -> c) -> String -> Int -> (a,b,c) -> SpecWith ()
       opTest op name prec (lhs, rhs, expected) = 
         foldr ($) ""
         [ showString "computes "
@@ -26,21 +28,21 @@ spec = do
         , showsPrec 0 expected
         ] `it` (lhs `op` rhs `shouldBe` expected)
 
-      opDescribe :: (Eq a, Show a) => (a -> a -> a) -> String -> Int -> [(a,a,a)] -> SpecWith ()
+      opDescribe :: (Show a, Show b, Eq c, Show c) => (a -> b -> c) -> String -> Int -> [(a,b,c)] -> SpecWith ()
       opDescribe op name prec examples =
         describe name $ mapM_ (opTest op name prec) examples
         
   describe "Num (Expansion Finite)" $ do
-    opDescribe (+) "+" 6
-      [ (0, 0, 0 :: Expansion Finite)
+    opDescribe @(Expansion Finite) (+) "+" 6
+      [ (0, 0, 0)
       , (1, 0, 1)
       , (0, 1, 1)
       , (1, 1, 2) , (ω, 1, Expansion [(1,1), (0,1)]) , (1, ω, ω)
       , (ω, ω ^ 2, ω ^ 2)
       ] 
 
-    opDescribe (*) "*" 7
-      [ (0, 0, 0 :: Expansion Finite)
+    opDescribe @(Expansion Finite) (*) "*" 7
+      [ (0, 0, 0)
       , (1, 0, 0)
       , (0, 1, 0)
       , (1, 1, 1)
@@ -54,12 +56,52 @@ spec = do
       , (ω, ω ^ ω, ω ^ ω)
       ] 
 
+  describe "QuotRem (Expansion Finite)" $ do
+    opDescribe @(Expansion Finite) quotRem "`quotRem`" 9
+      [ (0, 1, (0, 0))
+      , (7, 2, (3, 1))
+      , (ω, 3, (ω, 0))
+      , (ω, ω, (1, 0))
+      , (ω + 2, ω, (1, 2))
+      , (ω * 2, ω, (2, 0))
+      , (ω ^ 2, ω, (ω, 0))
+      , (ω ^ 2 + ω * 3 + 4, ω, (ω + 3, 4))
+      , (ω ^ 2 * 3, ω * 3, (ω * 3, 0))
+      , (1, ω, (0, 1))
+      -- α_2 < β_0
+      , (ω ^ 2 + ω * 3 + 4, ω ^ ω, (0, ω ^ 2 + ω * 3 + 4)) 
+      -- α_2 > β_0, α_1 > β_0, α_0 < β_0
+      , (ω ^ ω + ω ^ 2 + 1, ω, (ω ^ ω + ω, 1))
+      -- α_0 = β_0, a_0 / b_0 = 0
+      , (ω, ω * 2, (0, ω))
+      -- α_2 = β_0, a_2 / b_0 = 0,
+      , (ω ^ 2 + ω * 3 + 4, ω ^ 2 * 2, (0, ω ^ 2 + ω * 3 + 4))
+      -- α_2 = β_0, a_2 `quotRem` b_0 = (2,1)
+      , (ω ^ 2 * 5 + ω * 3 + 4, ω ^ 2 * 2 + ω + 2, (2, ω ^ 2 + ω * 3 + 4))
+      -- α_2 = β_1, a_2 `quotRem` b_1 = (2,0), α' = β'
+      , (ω ^ 2 * 4 + ω  + 2, ω ^ 2 * 2 + ω + 2, (2, 0))
+      -- α_2 = β_1, a_2 `quotRem` b_1 = (2,0), α' > β'
+      , (ω ^ 2 * 4 + ω * 3 + 4, ω ^ 2 * 2 + ω + 2, (2, ω * 2 + 4))
+      -- α_2 = β_1, a_2 `quotRem` b_1 = (2,0), α' < β'
+      , (ω ^ 2 * 4 + ω  + 2, ω ^ 2 * 2 + ω * 3 + 4, (1, ω ^ 2 * 2 + ω + 2))
+      -- α_2 = β_1, a_2 `quotRem` b_1 = (1,0), α' < β'
+      , (ω ^ 2 * 4 + ω  + 2, ω ^ 2 * 4 + ω * 3 + 4, (0, ω ^ 2 * 4 + ω + 2))
+      ]
+
   describe "Pow (Expansion Finite)" $ do
-    opDescribe (^) "^" 8
-      [ (ω, ω, Expansion [(ω,1)] :: Expansion Finite)
+    opDescribe @(Expansion Finite) (^) "^" 8
+      [ (ω, ω, Expansion [(ω,1)])
       ]
 
   describe "Num (Expansion (Expansion Finite))" $ do
-    opDescribe (*) "*" 7
-      [ (ε SZero + 1, ω, ε SZero * ω :: Expansion (Expansion Finite))
+    opDescribe @(Expansion (Expansion Finite)) (*) "*" 7
+      [ (ε SZero + 1, ω, ε SZero * ω)
+      , (ω, ε SZero + 1, ε SZero + ω)
+      ]
+
+  describe "QuotRem (Expansion (Expansion Finite))" $ do
+    let ε0 = Infinity :: Expansion (Expansion Finite)
+    opDescribe @(Expansion (Expansion Finite)) quotRem "`quotRem`" 9
+      -- α_2 = β_0, a_2 `quotRem` b_0 = (ω,0)
+      [  (ε0 ^ 2 * ω + ε0 + 2, ε0 ^ 2 * 3 + ε0 * 3 + 4, (ω, ε0 + 2))
       ]

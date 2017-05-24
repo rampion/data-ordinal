@@ -9,7 +9,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Data.Ordinal.Kleene.Internal where 
 
-import Prelude hiding (map, (^))
+import Prelude hiding (map, (^), quotRem)
 import Data.Typeable
 import Data.Functor.Identity (Identity(..))
 import Data.Functor.Const (Const(..))
@@ -17,6 +17,7 @@ import Data.Functor.Const (Const(..))
 import Data.Ordinal.Zero
 import Data.Ordinal.Lens
 import Data.Ordinal.Pow
+import Data.Ordinal.QuotRem
 import Data.Ordinal.Minus
 
 -- | Kleene star as applied to a transformer
@@ -44,7 +45,7 @@ data View f t b where
   View :: Context a t b -> f a -> View f t b
   
 -- | properties we're interested in preserving
-type Derived a = (Typeable a, Show a, HasZero a, Ord a, Num a, Pow a, Minus a)
+type Derived a = (Typeable a, Show a, HasZero a, Ord a, Num a, Pow a, Minus a, QuotRem a)
 
 instance Show (Kleene t b) where
   showsPrec p (Point b) = showsPrec p b
@@ -127,6 +128,9 @@ openView = \pf fk -> unify pf fk where
 
 data Pair a = Pair a a deriving (Functor, Foldable, Traversable)
 
+getPair :: Pair a -> (a,a)
+getPair (Pair a b) = (a,b)
+
 applyF :: (Functor f, LensBase t) => (forall a. Derived a => a -> a -> f a) -> Kleene t b -> Kleene t b -> f (Kleene t b)
 applyF op j k@(kleene -> QED) = case openView Reflexive (Pair j k) of
   View pf@(context -> QED) (Pair a b) -> toKleene pf <$> (a `op` b)
@@ -183,6 +187,9 @@ instance LensBase t => Pow (Kleene t b) where
 
 instance LensBase t => Minus (Kleene t b) where
   minus = applyF minus
+
+instance LensBase t => QuotRem (Kleene t b) where
+  quotRem = getPair # applyF (uncurry Pair # quotRem)
   
 -- | proof that Derived holds for a
 data HasDerived a where

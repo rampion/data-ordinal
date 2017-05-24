@@ -24,6 +24,7 @@ library
                  , Data.Ordinal.Kleene.Internal
                  , Data.Ordinal.Zero
                  , Data.Ordinal.Pow
+                 , Data.Ordinal.QuotRem
                  , Data.Ordinal.Lens
                  , Data.Ordinal.Minus
                  , Data.Ordinal.Omega

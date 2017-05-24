@@ -37,5 +37,5 @@ spec = do
           ] 
       
     forM_ examples $ \(proxy :=~ expected) ->
-      it ("generates " ++ expected ++ " for " ++ show (typeRep proxy)) $
+      it ("generates \"" ++ expected ++ "\" for Proxy @" ++ showsPrec 10 (typeRep proxy) "") $
         notation proxy 0 "" `shouldBe` expected

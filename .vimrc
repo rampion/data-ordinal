@@ -8,6 +8,7 @@ iabbr gamma γ
 iabbr omega ω
 iabbr epsilon ε
 iabbr delta δ
+iabbr infinity ∞
 
 let &makeprg="cabal"
 nnoremap <Leader>m :make build<CR>

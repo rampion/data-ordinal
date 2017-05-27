@@ -1,17 +1,35 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Data.Ordinal
-  ( module Ordinal
+  ( Finite(getFinite), pattern Finite, toFinite
+  , Positive(getPositive), pattern Positive, toPositive
+  , Expansion(getExpansion), pattern Expansion, pattern Lifted, pattern Infinity
+  , Kleene(Point), pattern Lower, lower
+  , FromKleene(FromKleene), fromKleene
+  , IsKleene(context), toKleene
+  , HasZero(isZero,zero), pattern Zero
+  , Pow((^))
+  , Minus(minus), Diff(LessThanBy, EqualTo, GreaterThanBy)
+  , QuotRem(quotRem)
+  , pattern Omega, isOmega, ω
+  , pattern OmegaOmega, isOmegaOmega, ω_ω
+  , pattern Epsilon, matchEpsilon, epsilon, ε
+  , pattern Eps, matchEps, toEps
+  , type (<=)(isLTE)
+  , Nat(NZero, NSucc)
+  , SNat(SZero, SSucc)
+  , LTE(LTrian, LEqual, LInfin)
+  , MSucc
+  , HasEpsilon(MaxEpsilon)
   ) where
 
-import Data.Ordinal.Finite as Ordinal
-import Data.Ordinal.Positive as Ordinal
-import Data.Ordinal.Expansion as Ordinal
-import Data.Ordinal.Kleene as Ordinal
-import Data.Ordinal.Zero as Ordinal
-import Data.Ordinal.Pow as Ordinal
-import Data.Ordinal.Lens as Ordinal
-import Data.Ordinal.Minus as Ordinal
-import Data.Ordinal.QuotRem as Ordinal
-import Data.Ordinal.Omega as Ordinal
-import Data.Ordinal.OmegaOmega as Ordinal
-import Data.Ordinal.Epsilon as Ordinal
-import Data.Ordinal.Notation as Ordinal
+import Data.Ordinal.Finite
+import Data.Ordinal.Positive
+import Data.Ordinal.Expansion 
+import Data.Ordinal.Kleene
+import Data.Ordinal.Zero
+import Data.Ordinal.Pow
+import Data.Ordinal.Minus
+import Data.Ordinal.QuotRem
+import Data.Ordinal.Omega
+import Data.Ordinal.OmegaOmega
+import Data.Ordinal.Epsilon

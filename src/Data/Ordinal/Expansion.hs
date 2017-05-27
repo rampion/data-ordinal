@@ -1,10 +1,12 @@
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE ViewPatterns #-}
 module Data.Ordinal.Expansion 
   ( module Data.Ordinal.Expansion.Internal
-  , pattern Expansion, pattern LiftedPositive
+  , pattern Expansion, pattern Lifted
   ) where
 
 import Data.Ordinal.Positive
+import Data.Ordinal.Lens
 import Data.Ordinal.Zero
 
 import qualified Data.Ordinal.Expansion.Internal as Internal
@@ -17,5 +19,8 @@ pattern Expansion :: (Num (Expansion a)) => [(Expansion a, Positive a)] -> Expan
 pattern Expansion ps <- Internal.Expansion ps where
   Expansion = sum . map (Internal.Expansion . return)
 
-pattern LiftedPositive :: (HasZero (Expansion a)) => Positive a -> Expansion a
-pattern LiftedPositive a = Internal.Expansion [(Zero, a)]
+pattern Lifted :: HasZero a => a -> Expansion a
+pattern Lifted a <- (toBase -> Just a) where
+  Lifted = fromBase
+  
+

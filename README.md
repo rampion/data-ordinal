@@ -1,4 +1,4 @@
-This project defines the `data-ordinal` haskell package for calculations using [ordinal number][1].
+This project defines the `data-ordinal` haskell package for calculations using [ordinal numbers][1].
 
 The simplest ordinal numbers are the finite ordinals, aka the natural numbers:
 
@@ -10,7 +10,7 @@ The simplest ordinal numbers are the finite ordinals, aka the natural numbers:
 
 We can expand on the finite ordinals to define ω, the smallest transfinite number
 
-    >>> let w = ω :: Expansion Finite
+    >>> let w = Omega :: Expansion Finite
     >>> w
     ω
 
@@ -130,3 +130,6 @@ And larger again... but the library doesn't have a pithy name for it
     Infinity @(Expansion (Kleene Expansion Finite))
     >>> Infinity :: Expansion (Expansion (Expansion (Kleene Expansion (Kleene (Kleene (Kleene Expansion)) (Kleene Expansion (Expansion (Expansion Finite)))))))
     Infinity @(Expansion (Expansion (Kleene Expansion (Kleene (Kleene (Kleene Expansion)) Finite))))
+
+[1]: https://en.wikipedia.org/wiki/Ordinal_number
+[2]: https://en.wikipedia.org/wiki/Ordinal_arithmetic#Cantor_normal_form
